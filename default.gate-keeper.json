@@ -1,0 +1,8 @@
+{
+    "port": 9000,
+    "host": "localhost",
+    "scripts": [{
+        "name": "List files",
+        "command": "ls"
+    }]
+}

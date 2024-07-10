@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "First line of defense of your trunk development",
     "main": "./src/index.js",
+    "type": "module",
     "scripts": {
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
@@ -45,7 +46,8 @@
         "standard-version": "^9.5.0"
     },
     "dependencies": {
-        "express": "^4.19.2"
+        "express": "^4.19.2",
+        "ws": "^8.17.1"
     },
     "config": {
         "commitizen": {
