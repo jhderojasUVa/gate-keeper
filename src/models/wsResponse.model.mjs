@@ -7,5 +7,5 @@ export const WS_RESPONSE_OK = {
 
 export const WS_RESPONSE_KO = {
     success: false,
-    error: undefined
+    data: undefined
 }
