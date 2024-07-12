@@ -3,6 +3,7 @@
 export const SCRIPT_MODEL = {
     name: undefined,
     command: undefined,
+    data: undefined,
     result: undefined,
 };
 

@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { loadPlugins } from './load_config.mjs';
 import { expressLog } from './log.mjs';
 
+// TBC change to promises
 export const executeScript = (script, callback) => {
     const { title, command } = script;
     exec(script, (error, stdout, stderr) => {
@@ -20,11 +21,12 @@ export const executeScript = (script, callback) => {
             callback(stdout);
         } else {
             // if not, return the stdout
-            return stdout
+            return stdout;
         }
     });
 };
 
+// TBC change to promises
 export const executeAllScripts = (scripts, callback) => {
     if (!Array.isArray(scripts)) {
         expressLog({

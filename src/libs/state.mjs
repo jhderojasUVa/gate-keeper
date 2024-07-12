@@ -1,4 +1,5 @@
 // State of the app - Singleton
+import { canCommit } from "./scripts_check.mjs";
 
 class State {
     // Initial State
@@ -11,11 +12,13 @@ class State {
     // Add all
     setResults(results) {
         this.scripts = results;
+        return this;
     }
 
     // Add one
     addResult(result) {
         this.scripts.push(result);
+        return this;
     }
 
     // Get one by title
@@ -32,6 +35,8 @@ class State {
                 this.scripts[index] = scriptContent;
             }
         });
+
+        return this;
     }
 
     // Remove one
@@ -44,11 +49,15 @@ class State {
                 this.scripts.slice(index, 1)
             }
         });
+
+        return this;
     }
 
     // Clear all
     clearAll() {
         this.scripts = [];
+
+        return this;
     }
 
     // Clear one
@@ -64,6 +73,16 @@ class State {
                 }
             }
         });
+
+        return this;
+    }
+
+    // Update canCommit
+    // I don't like this way and will be changed in the future
+    updateCanCommit() {
+        this.canCommit = canCommit(this.scripts);
+
+        return this;
     }
 };
 

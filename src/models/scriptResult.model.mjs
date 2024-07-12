@@ -4,5 +4,4 @@
 export const scriptResult = {
     sucess: false,
     data: undefined,
-    error: undefined,
 }

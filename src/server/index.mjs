@@ -23,9 +23,8 @@ express_server.listen(express_port, () => {
 GATE_KEEPER_CONFIG_MODEL = getConfigurationData();
 const GATE_KEEPER_PLUGINS = loadPlugins(GATE_KEEPER_CONFIGURATION);
 
-// First start
-// set the results
-GATE_KEEPER_STATE.setResult(executeAllScripts(GATE_KEEPER_PLUGINS));
+// First start and check
+// set the results and update the can commit
+GATE_KEEPER_STATE.setResult(executeAllScripts(GATE_KEEPER_PLUGINS)).updateCanCommit();
 
-// Load plugins
 startWebSocket(express_ws_port);
