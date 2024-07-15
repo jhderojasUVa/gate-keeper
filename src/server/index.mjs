@@ -6,7 +6,7 @@ import { expressLog } from '../libs/log.mjs';
 import { getConfigurationData, loadPlugins } from '../libs/load_config.mjs';
 import { executeAllScripts } from '../libs/execute_scripts.mjs';
 // Models
-import { GATE_KEEPER_CONFIG_MODEL } from '../models/configuration.model.mjs';
+import { GATE_KEEPER_CONFIG_MODEL as CONFIG_MODEL } from '../models/configuration.model.mjs';
 // State
 import { STATE as GATE_KEEPER_STATE } from '../libs/state.mjs';
 // Configuration
@@ -22,11 +22,11 @@ express_server.listen(express_port, () => {
 });
 
 // Load configuration
-GATE_KEEPER_CONFIG_MODEL = getConfigurationData();
-const GATE_KEEPER_PLUGINS = loadPlugins(GATE_KEEPER_CONFIGURATION);
+const GATE_KEEPER_CONFIG_MODEL = getConfigurationData();
+const GATE_KEEPER_PLUGINS = loadPlugins(GATE_KEEPER_CONFIG_MODEL);
 
 // First start and check
 // set the results and update the can commit
-GATE_KEEPER_STATE.setResult(executeAllScripts(GATE_KEEPER_PLUGINS)).updateCanCommit();
+GATE_KEEPER_STATE.setResults(executeAllScripts(GATE_KEEPER_PLUGINS)).updateCanCommit();
 
 startWebSocket(express_ws_port);
