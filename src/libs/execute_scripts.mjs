@@ -27,8 +27,6 @@ export const executeScript = (script, callback) => {
 
 // TBC change to promises
 export const executeAllScripts = (scripts, callback) => {
-    let result = [];
-
     if (!Array.isArray(scripts)) {
         expressLog({
             message: 'Invalid configuration file...',
