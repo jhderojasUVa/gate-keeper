@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Reponses of the server
 // Libs
 import { expressLog } from '../libs/log.mjs';
@@ -16,7 +18,7 @@ express_server.listen(express_port, () => {
         message: `http server started at port ${express_port}`,
         kind: 'HTTP SERVER',
         severity: 'INFO'
-    })
+    });
 });
 
 // Load configuration

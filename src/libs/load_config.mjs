@@ -1,21 +1,16 @@
 // Gets the configuration
 import fs from 'fs';
 import { __dirname } from './app_utils.mjs';
+import { CONFIGURATION_FILE, DEFAULT_CONFIGURATION_FILE } from '../models/configuration.model.mjs';
 
 // Check if config file exists
-const configFileExists = () => {
-    if (fs.existsSync('gate-keeper.json')) {
-        return true;
-    }
-
-    return false;
-};
+export const configFileExists = () => fs.existsSync(CONFIGURATION_FILE) ? true : false;
 
 export const getConfigurationData = () => {
     if (configFileExists()) {
-        return JSON.parse(fs.readFileSync(`gate-keeper.json`, { encoding: 'utf-8' }));
+        return JSON.parse(fs.readFileSync(CONFIGURATION_FILE, { encoding: 'utf-8' }));
     } else {
-        return JSON.parse(fs.readFileSync(`${__dirname}/../../default.gate-keeper.json`, { encoding: 'utf-8' }));
+        return JSON.parse(fs.readFileSync(`${__dirname}/../../${DEFAULT_CONFIGURATION_FILE}`, { encoding: 'utf-8' }));
     }
 };
 
