@@ -27,6 +27,14 @@ const GATE_KEEPER_PLUGINS = loadPlugins(GATE_KEEPER_CONFIG_MODEL);
 
 // First start and check
 // set the results and update the can commit
-GATE_KEEPER_STATE.setResults(executeAllScripts(GATE_KEEPER_PLUGINS)).updateCanCommit();
+try {
+    // const temp = await executeAllScripts(GATE_KEEPER_PLUGINS);
+    GATE_KEEPER_STATE.setResults(await executeAllScripts(GATE_KEEPER_PLUGINS));
+    // console.log(GATE_KEEPER_STATE)
+    await GATE_KEEPER_STATE.updateCanCommit();
 
-startWebSocket(express_ws_port);
+} catch (e) {
+    console.log(e);
+}
+
+// startWebSocket(express_ws_port);

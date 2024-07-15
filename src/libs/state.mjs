@@ -79,8 +79,8 @@ class State {
 
     // Update canCommit
     // I don't like this way and will be changed in the future
-    updateCanCommit() {
-        this.canCommit = canCommit(this.scripts);
+    async updateCanCommit() {
+        this.canCommit = await canCommit(this.scripts);
 
         return this;
     }

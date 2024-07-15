@@ -1,31 +1,19 @@
 import { exec } from 'child_process';
+import util from 'util';
 import { loadPlugins } from './load_config.mjs';
 import { expressLog } from './log.mjs';
 
-// TBC change to promises
-export const executeScript = (script, callback) => {
-    return exec(script, (error, stdout, stderr) => {
-        if (error) {
-            expressLog({
-                message: stderr,
-                severity: 'ERROR',
-                kind: 'CONF FILE - SCRIPTS'
-            });
+// Promisify the exec
+const execute = util.promisify(exec);
 
-            process.exit(1);
-        }
+// Execute script in Promise
+export const executeScript = (script) => {
+    const { command } = script;
 
-        // Execute the callback with the exit of the command
-        if (callback) {
-            callback(stdout);
-        } else {
-            // if not, return the stdout
-            return stdout;
-        }
-    });
+    return execute(command);
 };
 
-// TBC change to promises
+// Execute all scripts and return as a Promises
 export const executeAllScripts = (scripts, callback) => {
     if (!Array.isArray(scripts)) {
         expressLog({
@@ -37,8 +25,11 @@ export const executeAllScripts = (scripts, callback) => {
         process.exit(1);
     }
 
-    return scripts.map((script) => {
-        const { name, command } = script;
-        return executeScript(command, callback);
+    // Create the array of promises
+    let scriptArrayOfPromises = scripts.map(async(script) => {
+        return executeScript(script, callback)
     });
+
+    // Return the array of promises
+    return Promise.all(scriptArrayOfPromises);
 };
