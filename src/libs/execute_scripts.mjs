@@ -4,8 +4,7 @@ import { expressLog } from './log.mjs';
 
 // TBC change to promises
 export const executeScript = (script, callback) => {
-    const { title, command } = script;
-    exec(script, (error, stdout, stderr) => {
+    return exec(script, (error, stdout, stderr) => {
         if (error) {
             expressLog({
                 message: stderr,
@@ -38,7 +37,8 @@ export const executeAllScripts = (scripts, callback) => {
         process.exit(1);
     }
 
-    scripts.forEach((script) => {
-        executeScript(script, callback);
+    return scripts.map((script) => {
+        const { name, command } = script;
+        return executeScript(command, callback);
     });
 };
