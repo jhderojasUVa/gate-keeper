@@ -1,1 +1,1 @@
-// Hub file
+#!/usr/bin/env node
