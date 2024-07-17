@@ -25,4 +25,12 @@ This application is a background application that contains a web server and a we
 
 The
 
+# Env var configuration
+
+You can configure the server by passing this environmental variables:
+
+- `GATE_KEEPER_PORT`: By default 9000
+- `GATE_KEEPER_WS_PORT`: By default 9001
+- `GATE_KEEPER_HTTPS`: Boolean, by default true
+
 # Websocket messages
