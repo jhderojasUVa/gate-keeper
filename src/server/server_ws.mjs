@@ -5,6 +5,7 @@ import { express_ws_port } from './server_conf.mjs';
 // Messages
 import * as WebSocketResponses from './responses/server_responses.mjs';
 import * as WebSocketRequest from './requests/server_request.mjs';
+import { WSResponse } from './response.interface.mjs';
 // Constants
 import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
 // State machine
@@ -30,8 +31,8 @@ export const startWebSocket = () => {
             kind: 'WEB SOCKET',
         });
 
-        // send welcome message
-        ws.send(WebSocketResponses.connection, (error) => {
+        // Send welcome message
+        ws.send(WSResponse(WebSocketResponses.connection), (error) => {
             if (error) {
                 expressLog({
                     message: 'Error on client connection' + error,
@@ -108,8 +109,6 @@ export const startWebSocket = () => {
 
             process.exit(1);
         });
-
-        ws.send(JSON.stringify(WebSocketResponses.connection));
     });
 
 

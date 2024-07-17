@@ -5,6 +5,7 @@ class State {
     // Initial State
     constructor() {
         this.canCommit = false;
+        this.inProgress = false;
         this.scripts = [];
     }
 
@@ -81,6 +82,13 @@ class State {
     // I don't like this way and will be changed in the future
     async updateCanCommit() {
         this.canCommit = await canCommit(this.scripts);
+
+        return this;
+    }
+
+    // Working in progress
+    isWorking() {
+        this.inProgress = !this.inProgress;
 
         return this;
     }

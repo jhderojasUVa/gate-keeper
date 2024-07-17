@@ -28,10 +28,15 @@ const GATE_KEEPER_PLUGINS = loadPlugins(GATE_KEEPER_CONFIG_MODEL);
 // First start and check
 try {
     // Set the results and update the can commit
-    await GATE_KEEPER_STATE.setResults(await executeAllScripts(GATE_KEEPER_PLUGINS)).updateCanCommit();
+    // Todo: Refactor this to something better
+    GATE_KEEPER_STATE
+        .isWorking()
+        .setResults(await executeAllScripts(GATE_KEEPER_PLUGINS))
+        .updateCanCommit().then((gateKeeperState) => gateKeeperState.isWorking());
 } catch (e) {
     expressLog({
-        message: `Unable to execute the scripts/r/n${e}`,
+        message: `Unable to execute the scripts
+        ${e}`,
         kind: 'SCRIPTS',
         severity: 'ERROR'
     })
