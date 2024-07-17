@@ -5,5 +5,6 @@ export const TYPES_MESSAGES = {
     FIRST_RUN: 'FIRST_RUN', // first time execution
     ERROR: 'ERROR', // error
     EXIT: 'EXIT', // normal exit
+    UNKNOW: 'UNKNOW', // message unknow
     FATAL_ERROR: 'FATAL_ERROR' // fatal error, something went really wrong
 };
