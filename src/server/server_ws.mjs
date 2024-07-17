@@ -17,7 +17,7 @@ const wss = new WebSocketServer({
 
 export const startWebSocket = () => {
     expressLog({
-        message: `Websocket server started at port ${express_ws_port}`,
+        message: `Websocket server started at ${process.env.GATE_KEEPER_HTTPS === 'false' ? 'ws': 'wss'}://localhost:${express_ws_port}`,
         kind: 'WEB SOCKET',
     });
 

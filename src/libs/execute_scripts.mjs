@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import util from 'util';
-import { loadPlugins } from './load_config.mjs';
 import { expressLog } from './log.mjs';
 
 // Promisify the exec
