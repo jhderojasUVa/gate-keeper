@@ -1,0 +1,28 @@
+# Code creator check
+
+- [ ] Your commit is done in [conventional commit format/standard](https://www.conventionalcommits.org/en/v1.0.0/)
+- [ ] Unit test has passed with coverage
+- [ ] Updated documentation
+- [ ] Issue ID added
+- [ ] Added as a responsible
+- [ ] Tagged properly
+
+# Reviewer check
+
+- [ ] Do what needs to do
+- [ ] Documentation is understable, tags are ok, assignation is correct
+- [ ] No typos
+- [ ] Test pass properly and are understable
+- [ ] Updated Wiki (optional)
+
+# Why you did this?
+
+<!-- Add here a link to the issue you have resolved -->
+
+# How you did it?
+
+<!-- Small and understable explanation about how you resolve it -->
+
+# How did you test it?
+
+<!-- Explain the tests and put evidences -->
