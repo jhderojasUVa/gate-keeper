@@ -5,8 +5,11 @@ import { express_ws_port } from './server_conf.mjs';
 // Messages
 import * as WebSocketResponses from './responses/server_responses.mjs';
 import * as WebSocketRequest from './requests/server_request.mjs';
+import { WSResponse } from './response.interface.mjs';
 // Constants
 import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
+// State machine
+import { STATE as GATE_KEEPER_STATE } from '../libs/state.mjs';
 
 // Websocket creation
 const wss = new WebSocketServer({
@@ -28,13 +31,17 @@ export const startWebSocket = () => {
             kind: 'WEB SOCKET',
         });
 
-        // send welcome message
-        ws.send(WebSocketResponses.connection, (error) => {
-            expressLog({
-                message: 'Error on client connection' + error,
-                kind: 'WEB SOCKET',
-                severity: 'INFO'
-            });
+        // Send welcome message
+        ws.send(WSResponse(WebSocketResponses.connection), (error) => {
+            if (error) {
+                expressLog({
+                    message: 'Error on client connection' + error,
+                    kind: 'WEB SOCKET',
+                    severity: 'INFO'
+                });
+            }
+
+            // Send current status
         });
 
         // Socket events
@@ -50,14 +57,39 @@ export const startWebSocket = () => {
             // Check message if is for running things again
             switch (message.type.toUpperCase()) {
                 case TYPES_MESSAGES.RE_CHECK:
+                    expressLog({
+                        message: `ReCheck asked by client`,
+                        kind: 'WEB SOCKET',
+                        severity: 'INFO',
+                    });
                     break;
                 case TYPES_MESSAGES.FIRST_RUN:
+                    expressLog({
+                        message: `First run`,
+                        kind: 'WEB SOCKET',
+                        severity: 'INFO',
+                    });
                     break;
                 case TYPES_MESSAGES.EXIT:
+                    expressLog({
+                        message: `Client asked for exit`,
+                        kind: 'WEB SOCKET',
+                        severity: 'INFO',
+                    });
                     break;
                 case TYPES_MESSAGES.FATAL_ERROR:
+                    expressLog({
+                        message: `Error message by client`,
+                        kind: 'WEB SOCKET',
+                        severity: 'ERROR',
+                    });
                     break;
                 default:
+                    expressLog({
+                        message: `Unknow message... we do nothing`,
+                        kind: 'WEB SOCKET',
+                        severity: 'INFO',
+                    });
                     break;
             }
         });
@@ -77,8 +109,6 @@ export const startWebSocket = () => {
 
             process.exit(1);
         });
-
-        ws.send(JSON.stringify(WebSocketResponses.connection));
     });
 
 

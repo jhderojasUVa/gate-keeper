@@ -6,14 +6,19 @@ import { WS_RESPONSE_OK, WS_RESPONSE_KO } from '../../models/wsResponse.model.mj
 // Greeting of the app
 export const connection = {
     ...WS_RESPONSE_OK,
-    ...TYPES_MESSAGES.FIRST_RUN,
+    type: TYPES_MESSAGES.FIRST_RUN,
     data: `Welcome to Gate Keeper Web Socket server version ${version}!`
 }
 
 // Response of the app
-export const response = (data, isOK = true) => {
+export const response = ({
+    data,
+    isOK,
+    typeMessage,
+} = {}) => {
     return {
         ...(isOK ? WS_RESPONSE_OK : WS_RESPONSE_KO),
+        type: TYPES_MESSAGES[typeMessage] !== undefined ? TYPES_MESSAGES[typeMessage] : TYPES_MESSAGES.UNKNOW,
         data,
     }
 }
