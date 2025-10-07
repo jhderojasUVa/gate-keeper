@@ -30,6 +30,11 @@ express_app.get('/cancommit', (req, res) => {
     res.json({ cancommit: STATE.canCommit });
 });
 
+// WS port endpoint
+express_app.get('/ws-port', (req, res) => {
+    res.json({ port: express_ws_port });
+});
+
 // Create server
 let express_server = undefined;
 
