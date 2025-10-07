@@ -1,3 +1,0 @@
-argv: ["C:\\Program Files (x86)\\nodejs\\node.exe","C:\\Projects\\gate-keeper\\.husky\\commit-msg",".git/COMMIT_EDITMSG"]
-commitMsgFile: .git/COMMIT_EDITMSG
-absolutePath: C:\Projects\gate-keeper\.git\COMMIT_EDITMSG
