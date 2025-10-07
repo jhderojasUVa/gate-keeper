@@ -22,3 +22,5 @@ export const response = ({
         data,
     }
 }
+
+export const canCommit = (commit) => commit;
