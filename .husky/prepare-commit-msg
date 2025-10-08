@@ -1,4 +1,13 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/usr/bin/env node
+import { spawnSync } from 'child_process';
 
-exec < /dev/tty && node_modules/.bin/cz --hook || true
+const result = spawnSync('npx', ['cz', '--hook'], {
+  stdio: 'inherit',
+  shell: true, // Use shell to ensure npx.cmd is found on Windows
+});
+
+// cz-cli exits with 1 on user cancellation. We don't want to fail the commit for that.
+// The original script had `|| true`, so we effectively ignore the exit code.
+if (result.status !== 0) {
+  console.log(`husky - prepare-commit-msg hook: cz --hook exited with status ${result.status}.`);
+}

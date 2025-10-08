@@ -1,4 +1,24 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/usr/bin/env node
+import { spawnSync } from 'child_process';
+import { argv } from 'process';
+import { resolve } from 'path';
 
-npx --no -- commitlint --edit "$1"
+const commitMsgFile = argv[2];
+if (!commitMsgFile) {
+  process.exit(0);
+}
+
+const absolutePath = resolve(commitMsgFile);
+
+// Path to local commitlint executable
+const commitlintPath = resolve('node_modules', '.bin', 'commitlint');
+
+const result = spawnSync(commitlintPath, ['--edit', absolutePath], {
+  stdio: 'inherit',
+  shell: true, // shell:true might still be needed for node shebang resolution on Windows
+});
+
+if (result.status !== 0) {
+  console.error('commit-msg hook failed: commitlint check');
+  process.exit(1);
+}
