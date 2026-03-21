@@ -1,12 +1,14 @@
 import globals from 'globals';
 import pluginJs from '@eslint/js';
-import stylisticJs from '@stylistic/eslint-plugin-js'
+import stylisticJs from '@stylistic/eslint-plugin-js';
+import jsdoc from 'eslint-plugin-jsdoc';
 
 export default [{
-        files: ['**/*.js'],
+        files: ['**/*.js', '**/*.mjs'],
         languageOptions: { sourceType: 'commonjs' },
         plugins: {
-            '@stylistic/js': stylisticJs
+            '@stylistic/js': stylisticJs,
+            'jsdoc': jsdoc
         },
     },
     {
@@ -24,7 +26,9 @@ export default [{
             'semi': 'error',
             quotes: ['error', 'single', {
                 allowTemplateLiterals: true,
-            }]
+            }],
+            'jsdoc/require-jsdoc': 'error',
+            'jsdoc/require-description': 'error'
         },
     },
 ];

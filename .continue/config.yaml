@@ -1,0 +1,17 @@
+context:
+  - provider: debugger
+    params:
+      stackDepth: 3
+  - provider: problems
+  - provider: open
+    params:
+      onlyPinned: true
+  - provider: terminal
+  - provider: currentFile
+  - provider: diff
+  - provider: code
+  - provider: tree
+  - provider: repo-map
+    params:
+      includeSignatures: true # default is true
+  - provider: os
