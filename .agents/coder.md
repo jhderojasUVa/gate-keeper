@@ -18,3 +18,4 @@ Your primary responsibility is to write, modify, and refactor code according to 
 - Follow DRY (Don't Repeat Yourself) and SOLID principles.
 - Maintain high modularity for easier testing.
 - Write clear instructions and inline comments for complex logic.
+- Write comments following JSDocs standards.
