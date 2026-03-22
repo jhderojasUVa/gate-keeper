@@ -34,3 +34,9 @@ You can configure the server by passing this environmental variables:
 - `GATE_KEEPER_HTTPS`: Boolean, by default true
 
 # Websocket messages
+
+## AI Agents Integration
+
+This project is fully integrated with a collaborative AI loop logic (Coder, Tester, Reviewer).
+All agents are strictly controlled by the rules articulated in `AGENT_RULESET.md`. 
+To learn how to execute automated workflows via these agents, read the guide at `.agents/workflows/collaborative-loop.md` or invoke the agent framework using prompt commands.
