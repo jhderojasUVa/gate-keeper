@@ -52,8 +52,7 @@ export const startGateKeeper = async () => {
         updatedState.isWorking();
     } catch (e) {
         expressLog({
-            message: `Unable to execute the scripts
-        ${e}`,
+            message: `Unable to execute the scripts\n        ${e}`,
             kind: 'SCRIPTS',
             severity: 'ERROR'
         });
@@ -65,15 +64,12 @@ export const startGateKeeper = async () => {
 
 // Execute if run directly (not imported as a module)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    // Check if --open flag is provided to open browser after starting server
     const openBrowser = process.argv.includes('--open');
     (async () => {
         await startGateKeeper();
         if (openBrowser) {
-            // Determine protocol based on HTTPS configuration
             const protocol = isHTTPS ? 'https' : 'http';
             const url = `${protocol}://localhost:${express_port}`;
-            // Use platform-specific command to open browser
             let command;
             if (process.platform === 'darwin') {
                 command = `open "${url}"`;
