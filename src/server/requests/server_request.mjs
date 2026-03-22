@@ -4,6 +4,6 @@ import { TYPES_MESSAGES } from '../../models/wsServerRequest.model.mjs';
 
 export const welcomeMessage = {
     ...WS_RESPONSE_OK,
-    ...TYPES_MESSAGES.FIRST_RUN,
+    type: TYPES_MESSAGES.FIRST_RUN,
     data: {},
 }
