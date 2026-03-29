@@ -9,7 +9,8 @@ describe('WS Server Request Model', () => {
             ERROR: 'ERROR',
             EXIT: 'EXIT',
             UNKNOW: 'UNKNOW',
-            FATAL_ERROR: 'FATAL_ERROR'
+            FATAL_ERROR: 'FATAL_ERROR',
+            STATUS_UPDATE: 'STATUS_UPDATE'
         });
     });
 });

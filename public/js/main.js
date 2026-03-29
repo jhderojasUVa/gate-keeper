@@ -97,13 +97,31 @@ const connectToWs = async () => {
                 }
             }, 1000);
 
-            const logEl = createLogElement(message);
-            logWindow.appendChild(logEl);
-            // auto-scroll
-            logWindow.scrollTop = logWindow.scrollHeight;
+            // Handle STATUS_UPDATE messages specially
+            if (message.type === 'STATUS_UPDATE' && message.data) {
+                updateCommitStatus(commitStatusDiv, message.data.canCommit);
+                // Also log the scripts if available
+                if (message.data.scripts) {
+                    message.data.scripts.forEach(script => {
+                        const scriptLog = createLogElement({
+                            success: script.result ? true : false,
+                            type: 'SCRIPT_RESULT',
+                            data: `${script.name}: ${script.result || 'Failed'}`
+                        });
+                        logWindow.appendChild(scriptLog);
+                    });
+                    logWindow.scrollTop = logWindow.scrollHeight;
+                }
+            } else {
+                // For other messages, create log entry
+                const logEl = createLogElement(message);
+                logWindow.appendChild(logEl);
+                // auto-scroll
+                logWindow.scrollTop = logWindow.scrollHeight;
 
-            // After processing the message, check if user can commit again
-            await updateCommitStatus(commitStatusDiv);
+                // After processing the message, check if user can commit again
+                await updateCommitStatus(commitStatusDiv);
+            }
         } catch (error) {
             console.error('Error processing message:', error);
             // Non-JSON or other error
@@ -125,25 +143,31 @@ const connectToWs = async () => {
 };
 
 // Check if user can commit and update the UI
-const updateCommitStatus = async (commitStatusDiv) => {
+const updateCommitStatus = async (commitStatusDiv, canCommitOverride) => {
     const titleObj = document.getElementById('commit-status-title');
     const descObj = document.getElementById('commit-status-desc');
 
     try {
-        const response = await fetch('/cancommit', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        let canCommit;
+        if (canCommitOverride !== undefined) {
+            canCommit = canCommitOverride;
+        } else {
+            const response = await fetch('/cancommit', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            canCommit = result.cancommit;
         }
-
-        const result = await response.json();
         
-        if (result.canCommit) {
+        if (canCommit) {
             commitStatusDiv.className = 'commit-status card success';
             titleObj.textContent = 'Ready to Commit';
             descObj.textContent = 'All checks passed. You can commit safely.';
