@@ -33,6 +33,7 @@ export const expressLog = ({
 
     // if write to disk
     if (logOnDisk) {
-
+        const logFile = process.env.GATE_KEEPER_LOG_FILE || 'gate-keeper.log';
+        fs.appendFileSync(logFile, `[${new Date().toISOString()}] [${severity}] [${kind}] ${message}\n`);
     }
 }

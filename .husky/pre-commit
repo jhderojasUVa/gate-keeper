@@ -1,4 +1,9 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/usr/bin/env node
+import { execSync } from 'child_process';
 
-npm test
+try {
+  execSync('npm test', { stdio: 'inherit' });
+} catch (error) {
+  console.error('pre-commit hook failed: npm test');
+  process.exit(1);
+}

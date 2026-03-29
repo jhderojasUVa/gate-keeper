@@ -1,12 +1,67 @@
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
-    <title>Gate Keeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gate Keeper Dashboard</title>
+    <meta name="description" content="Dashboard for Gate Keeper status and commit logs">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
-    <h1>Gate keeper static webpage...</h1>
-</body>
+    <div class="blob-bg">
+        <div class="blob-1"></div>
+        <div class="blob-2"></div>
+        <div class="blob-3"></div>
+    </div>
+    
+    <div class="dashboard-wrapper">
+        <header class="app-header glass-panel">
+            <div class="brand">
+                <div class="logo-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Gate Keeper</h1>
+                    <p class="subtitle">Live System Monitor</p>
+                </div>
+            </div>
+            <div id="ws-status" class="ws-badge connecting">
+                <span class="ws-dot"></span>
+                <span class="ws-text">Connecting...</span>
+            </div>
+        </header>
 
+        <main class="dashboard-grid">
+            <section class="status-section glass-panel">
+                <div class="section-header">
+                    <h2>Commit Status</h2>
+                </div>
+                <div id="commit-status" class="commit-status card loading">
+                    <div class="status-orb"></div>
+                    <div class="status-content">
+                        <h3 id="commit-status-title">Checking Permission</h3>
+                        <p id="commit-status-desc">Awaiting server verification...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="logs-section glass-panel">
+                <div class="section-header">
+                    <h2>System Feed</h2>
+                    <div id="msg-type" class="badge-type">Awaiting data</div>
+                </div>
+                <div class="log-window" id="log-window">
+                    <!-- Logs will go here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
 </html>

@@ -1,5 +1,9 @@
 // Models of messages sent from server and sent from client
 
+/**
+ * Enumeration of available standard message types for the WebSocket communication.
+ * @type {{ RE_CHECK: string, FIRST_RUN: string, STILL_WORKING: string, ERROR: string, EXIT: string, UNKNOW: string, FATAL_ERROR: string }}
+ */
 export const TYPES_MESSAGES = {
     RE_CHECK: 'RE_CHECK', // check again
     FIRST_RUN: 'FIRST_RUN', // first time execution

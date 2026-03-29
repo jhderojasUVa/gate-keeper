@@ -20,7 +20,7 @@ export const express_app = express();
 // If no port is setted use the standard 9000
 export const express_port = process.env.GATE_KEEPER_PORT || 9000;
 export const express_ws_port = process.env.GATE_KEEPER_WS_PORT || 9001;
-export const isHTTPS = (process.env.GATE_KEEPER_HTTPS === 'false' ? false : true) || true
+export const isHTTPS = process.env.GATE_KEEPER_HTTPS !== 'false';
 
 // Static assets
 express_app.use(express.static(`${__dirname}/../../public`));
@@ -28,6 +28,11 @@ express_app.use(express.static(`${__dirname}/../../public`));
 // Can commit endpoint
 express_app.get('/cancommit', (req, res) => {
     res.json({ cancommit: STATE.canCommit });
+});
+
+// WS port endpoint
+express_app.get('/ws-port', (req, res) => {
+    res.json({ port: express_ws_port });
 });
 
 // Create server
