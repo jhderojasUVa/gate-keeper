@@ -8,6 +8,9 @@
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
+// Import message types
+import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
+
 // Determine if running as main module (works for npm-linked commands)
 const currentFileUrl = import.meta.url;
 const currentFilePath = fileURLToPath(currentFileUrl);
@@ -96,41 +99,39 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
 };
 
 /**
- * Opens the graphical client in a browser pointing to the public directory
+ * Opens the graphical client in a browser pointing to the server's web interface
  * @async
  * @returns {Promise<void>}
  */
 const openClient = async () => {
     try {
         const { exec } = await import('child_process');
-        const { __dirname } = await import('../libs/app_utils.mjs');
-        const path = await import('path');
         
-        const publicPath = path.join(__dirname, '../../public/index.html');
+        const port = process.env.GATE_KEEPER_PORT || 9000;
+        const isHttps = process.env.GATE_KEEPER_HTTPS !== 'false';
+        const protocol = isHttps ? 'https' : 'http';
+        const url = `${protocol}://localhost:${port}`;
         
-        log(`🌐 Opening graphical client at ${publicPath}...`);
+        log(`🌐 Opening graphical client at ${url}...`);
         
-        let fileUrl = `file://${publicPath}`;
         let command;
         
         if (process.platform === 'darwin') {
-            command = `open "${fileUrl}"`;
+            command = `open "${url}"`;
         } else if (process.platform === 'win32') {
-            command = `start "${fileUrl}"`;
+            command = `start "${url}"`;
         } else if (isWSL()) {
-            // In WSL, convert Linux path to Windows path for PowerShell
+            // In WSL, use PowerShell to open the URL
             log('   (Running in WSL, opening host browser...)');
-            const windowsPath = toWindowsPath(publicPath);
-            fileUrl = `file:///${windowsPath.replace(/\\/g, '/')}`;
-            command = `powershell.exe -Command "Start-Process '${fileUrl}'"`;
+            command = `powershell.exe -Command "Start-Process '${url}'"`;
         } else {
-            command = `xdg-open "${fileUrl}"`;
+            command = `xdg-open "${url}"`;
         }
         
         exec(command, (error) => {
             if (error) {
                 log(`❌ Failed to open browser: ${error.message}`);
-                log(`   You can manually open: ${publicPath}`);
+                log(`   You can manually open: ${url}`);
                 exitWithCode(1);
             } else {
                 log(`✅ Graphical client opened in your browser!`);
@@ -167,7 +168,7 @@ export const startGateKeeper = async () => {
 
         // Dynamic imports to avoid issues when just showing help
         let expressLog, getConfigurationData, loadPlugins, configFileExists, executeAllScripts, GATE_KEEPER_STATE;
-        let express_server, express_port, express_ws_port, isHTTPS, startWebSocket;
+        let express_server, express_port, express_ws_port, isHTTPS, startWebSocket, broadcast;
 
         try {
             log('📦 Loading dependencies...');
@@ -194,6 +195,7 @@ export const startGateKeeper = async () => {
             
             const wsModule = await import('./server_ws.mjs');
             startWebSocket = wsModule.startWebSocket;
+            broadcast = wsModule.broadcast;
         } catch (importError) {
             log(`❌ Error loading dependencies: ${importError.message}`);
             if (importError.stack) {
@@ -260,6 +262,17 @@ export const startGateKeeper = async () => {
             if (!canCommit) {
                 log('   Some checks failed. Check the web interface for details.');
             }
+
+            // Broadcast the updated status to all connected clients
+            const statusUpdate = {
+                type: TYPES_MESSAGES.STATUS_UPDATE,
+                data: {
+                    canCommit: canCommit,
+                    scripts: results
+                },
+                success: true
+            };
+            broadcast(statusUpdate);
         } catch (e) {
             log(`❌ Error executing scripts: ${e.message}`);
             expressLog({

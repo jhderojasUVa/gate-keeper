@@ -18,6 +18,27 @@ const wss = new WebSocketServer({
     threshold: 1024
 });
 
+// Keep track of connected clients
+const clients = new Set();
+
+// Broadcast function to send messages to all connected clients
+export const broadcast = (message) => {
+    const messageStr = JSON.stringify(message);
+    clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(messageStr, (error) => {
+                if (error) {
+                    expressLog({
+                        message: 'Error broadcasting message: ' + error,
+                        kind: 'WEB SOCKET',
+                        severity: 'ERROR'
+                    });
+                }
+            });
+        }
+    });
+};
+
 export const startWebSocket = () => {
     expressLog({
         message: `Websocket server started at ${process.env.GATE_KEEPER_HTTPS === 'false' ? 'ws': 'wss'}://localhost:${express_ws_port}`,
@@ -26,8 +47,11 @@ export const startWebSocket = () => {
 
     // Server events
     wss.on('connection', (ws) => {
+        // Add client to the set
+        clients.add(ws);
+
         expressLog({
-            message: `Connection stablished`,
+            message: `Connection established`,
             kind: 'WEB SOCKET',
         });
 
@@ -40,8 +64,25 @@ export const startWebSocket = () => {
                     severity: 'INFO'
                 });
             }
+        });
 
-            // Send current status
+        // Send current status after connection
+        const currentStatus = {
+            type: TYPES_MESSAGES.STATUS_UPDATE,
+            data: {
+                canCommit: GATE_KEEPER_STATE.canCommit,
+                scripts: GATE_KEEPER_STATE.scripts
+            },
+            success: true
+        };
+        ws.send(WSResponse(currentStatus), (error) => {
+            if (error) {
+                expressLog({
+                    message: 'Error sending current status: ' + error,
+                    kind: 'WEB SOCKET',
+                    severity: 'ERROR'
+                });
+            }
         });
 
         // Socket events
@@ -108,6 +149,16 @@ export const startWebSocket = () => {
             });
 
             process.exit(1);
+        });
+
+        ws.on('close', () => {
+            // Remove client from the set
+            clients.delete(ws);
+            expressLog({
+                message: 'Client disconnected',
+                kind: 'WEB SOCKET',
+                severity: 'INFO',
+            });
         });
     });
 
