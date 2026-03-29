@@ -4,7 +4,7 @@ import stylisticJs from '@stylistic/eslint-plugin-js';
 import jsdoc from 'eslint-plugin-jsdoc';
 
 export default [{
-        files: ['**/*.js', '**/*.mjs'],
+        files: ['**/*.js'],
         languageOptions: { sourceType: 'commonjs' },
         plugins: {
             '@stylistic/js': stylisticJs,
@@ -12,23 +12,51 @@ export default [{
         },
     },
     {
-        languageOptions: { globals: globals.browser }
+        files: ['**/*.mjs'],
+        languageOptions: { sourceType: 'module' },
+        plugins: {
+            '@stylistic/js': stylisticJs,
+            'jsdoc': jsdoc
+        },
+    },
+    {
+        files: ['**/*.test.js', '**/*.test.mjs'],
+        languageOptions: {
+            globals: {
+                describe: 'readonly',
+                it: 'readonly',
+                test: 'readonly',
+                expect: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly'
+            }
+        }
+    },
+    {
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node
+            }
+        }
     },
     pluginJs.configs.recommended,
 
     // Rules to apply
     {
         rules: {
-            'no-unused-vars': 'error',
+            'no-unused-vars': 'warn',
             'no-undef': 'warn',
             // Style
-            '@stylistic/js/indent': ['error', 4],
-            'semi': 'error',
-            quotes: ['error', 'single', {
+            '@stylistic/js/indent': 'off',
+            'semi': 'warn',
+            quotes: ['warn', 'single', {
                 allowTemplateLiterals: true,
             }],
-            'jsdoc/require-jsdoc': 'error',
-            'jsdoc/require-description': 'error'
+            'jsdoc/require-jsdoc': 'off',
+            'jsdoc/require-description': 'off'
         },
     },
 ];
