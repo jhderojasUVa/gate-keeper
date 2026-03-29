@@ -19,13 +19,13 @@ For running this tool you will need to have a configuration file on the root of 
 
 # Plugin/Scripts
 
-You can customize by adding wh
+You can customize the behavior of the gate-keeper by adding your own scripts in the `gate-keeper.conf.json` configuration file. Each script entry should specify a name and the command to execute. These scripts will be run sequentially before allowing a commit.
 
 # Websocket based, web and terminal client
 
 This application is a background application that contains a web server and a websocket. The webserver is used as an application for checking the status of your code and if you can commit, meanwhile the websocket is the engine of the gate keeper.
 
-The
+The websocket protocol enables bidirectional communication between the server and client, allowing real-time updates on script execution status and immediate feedback on code quality checks. The web interface provides a user-friendly dashboard to monitor and manage the gate-keeper service.
 
 # Env var configuration
 
@@ -37,8 +37,18 @@ You can configure the server by passing this environmental variables:
 
 # Websocket messages
 
+The websocket communication follows a request-response pattern. Clients can send messages to trigger script executions, request status updates, and receive real-time notifications about the processing status. Common message types include script execution requests, status queries, and result notifications.
+
 ## AI Agents Integration
 
 This project is fully integrated with a collaborative AI loop logic (Coder, Tester, Reviewer).
-All agents are strictly controlled by the rules articulated in `AGENT_RULESET.md`. 
-To learn how to execute automated workflows via these agents, read the guide at `.agents/workflows/collaborative-loop.md` or invoke the agent framework using prompt commands.
+All agents are strictly controlled by the rules articulated in [AGENT_RULESET.md](AGENT_RULESET.md). 
+To learn how to execute automated workflows via these agents, read the guide at [AGENTS.md](AGENTS.md) or invoke the agent framework using prompt commands.
+
+# Contributing
+
+We welcome contributions to the gate-keeper project! Please see [CONTRIBUTE.md](CONTRIBUTE.md) for detailed guidelines on how to contribute.
+
+# License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
