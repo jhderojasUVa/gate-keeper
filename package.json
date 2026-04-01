@@ -20,6 +20,9 @@
         "gate-keeper": "./src/server/index.mjs",
         "gate-keeper-init": "./src/init.mjs"
     },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/jhderojasUVa/gate-keeper.git"
