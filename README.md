@@ -6,7 +6,7 @@ For detailed instructions on how to install and run the application, see [HOW_TO
 
 # Libraries used
 
-- Jest: Unit testing
+- Vitest: Unit testing
 - Husky: Git hooks
 - Commitizen: Conventional Commits wizard
 - Commitlint: Lint commit messages
