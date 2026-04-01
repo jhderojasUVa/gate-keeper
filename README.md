@@ -1,4 +1,4 @@
-# @jhderojas/gate-keeper
+# @jhderojasUVa/gate-keeper
 
 Working on trunk development with JS or TS? This tool is the first line of defence about pushing bad code. It consist in an application running in the background that will check your code before commit (or at any time if you enable it when detecting a change on your code) that will run the scripts you want and let you commit or not by adding a pre-commit hook.
 
