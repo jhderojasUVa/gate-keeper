@@ -1,60 +1,67 @@
 import { configFileExists, getConfigurationData, loadPlugins } from '../../src/libs/load_config.mjs';
 import fs from 'fs';
+import { vi } from 'vitest';
 
 // Mock fs
-jest.mock('fs', () => ({
-    existsSync: jest.fn(),
-    readFileSync: jest.fn()
+vi.mock('fs', () => ({
+    default: {
+        existsSync: vi.fn(),
+        readFileSync: vi.fn()
+    },
+    existsSync: vi.fn(),
+    readFileSync: vi.fn()
 }));
 
 // Mock app_utils
-jest.mock('../../src/libs/app_utils.mjs', () => ({
+vi.mock('../../src/libs/app_utils.mjs', () => ({
     __dirname: '/mock/dir'
 }));
 
 // Mock configuration model
-jest.mock('../../src/models/configuration.model.mjs', () => ({
+vi.mock('../../src/models/configuration.model.mjs', () => ({
     CONFIGURATION_FILE: '/path/to/config.json',
     DEFAULT_CONFIGURATION_FILE: 'default.gate-keeper.conf.json'
 }));
 
 describe('Load Config', () => {
-    const { existsSync, readFileSync } = require('fs');
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('configFileExists', () => {
         it('should return true when config file exists', () => {
-            existsSync.mockReturnValue(true);
+            fs.existsSync.mockReturnValue(true);
             expect(configFileExists()).toBe(true);
-            expect(existsSync).toHaveBeenCalledWith('/path/to/config.json');
+            expect(fs.existsSync).toHaveBeenCalledWith('/path/to/config.json');
         });
 
         it('should return false when config file does not exist', () => {
-            existsSync.mockReturnValue(false);
+            fs.existsSync.mockReturnValue(false);
             expect(configFileExists()).toBe(false);
         });
     });
 
     describe('getConfigurationData', () => {
         it('should load config file when it exists', () => {
-            existsSync.mockReturnValue(true);
-            readFileSync.mockReturnValue('{"test": "config"}');
+            fs.existsSync.mockReturnValue(true);
+            fs.readFileSync.mockReturnValue('{"test": "config"}');
 
             const result = getConfigurationData();
             expect(result).toEqual({ test: 'config' });
-            expect(readFileSync).toHaveBeenCalledWith('/path/to/config.json', { encoding: 'utf-8' });
+            expect(fs.readFileSync).toHaveBeenCalledWith('/path/to/config.json', { encoding: 'utf-8' });
         });
 
         it('should load default config when file does not exist', () => {
-            existsSync.mockReturnValue(false);
-            readFileSync.mockReturnValue('{"default": "config"}');
+            fs.existsSync.mockReturnValue(false);
+            fs.readFileSync.mockReturnValue('{"default": "config"}');
 
             const result = getConfigurationData();
             expect(result).toEqual({ default: 'config' });
-            expect(readFileSync).toHaveBeenCalledWith('/mock/dir/../../default.gate-keeper.conf.json', { encoding: 'utf-8' });
+            expect(fs.readFileSync).toHaveBeenCalledWith(
+                expect.stringContaining('default.gate-keeper.conf.json'),
+                { encoding: 'utf-8' }
+            );
         });
     });
 

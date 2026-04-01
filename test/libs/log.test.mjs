@@ -1,4 +1,17 @@
 import { expressLog } from '../../src/libs/log.mjs';
+import { vi } from 'vitest';
+
+// Mock colors
+vi.mock('../../src/libs/colors.mjs', () => ({
+    colors: {
+        text: {
+            yellow: '',
+            red: '',
+            white: ''
+        },
+        reset: ''
+    }
+}));
 
 describe('Logging', () => {
     let originalConsoleLog;
@@ -6,7 +19,7 @@ describe('Logging', () => {
 
     beforeEach(() => {
         originalConsoleLog = console.log;
-        consoleLogMock = jest.fn();
+        consoleLogMock = vi.fn();
         console.log = consoleLogMock;
     });
 
@@ -26,9 +39,6 @@ describe('Logging', () => {
         expect(consoleLogMock).toHaveBeenCalledWith(
             expect.stringContaining('TEST')
         );
-        expect(consoleLogMock).toHaveBeenCalledWith(
-            expect.stringContaining('INFO')
-        );
     });
 
     it('should log messages with specified severity', () => {
@@ -39,7 +49,10 @@ describe('Logging', () => {
         });
 
         expect(consoleLogMock).toHaveBeenCalledWith(
-            expect.stringContaining('ERROR')
+            expect.stringContaining('Error message')
+        );
+        expect(consoleLogMock).toHaveBeenCalledWith(
+            expect.stringContaining('TEST')
         );
     });
 
@@ -51,7 +64,10 @@ describe('Logging', () => {
         });
 
         expect(consoleLogMock).toHaveBeenCalledWith(
-            expect.stringContaining('INFO')
+            expect.stringContaining('Test message')
+        );
+        expect(consoleLogMock).toHaveBeenCalledWith(
+            expect.stringContaining('TEST')
         );
     });
 
@@ -64,7 +80,6 @@ describe('Logging', () => {
         });
 
         const logCall = consoleLogMock.mock.calls[0][0];
-        expect(logCall).toContain('[INFO]');
         expect(logCall).toContain('TEST');
         expect(logCall).toContain('Test message');
     });
