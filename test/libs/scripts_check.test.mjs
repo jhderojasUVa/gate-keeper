@@ -3,16 +3,16 @@ import { canCommit } from '../../src/libs/scripts_check.mjs';
 describe('Scripts Check', () => {
     it('should return true when all scripts pass', () => {
         const scripts = [
-            { name: 'test1', result: { success: true } },
-            { name: 'test2', result: { success: true } }
+            { name: 'test1', result: true },
+            { name: 'test2', result: true }
         ];
         expect(canCommit(scripts)).toBe(true);
     });
 
     it('should return false when any script fails', () => {
         const scripts = [
-            { name: 'test1', result: { success: true } },
-            { name: 'test2', result: { success: false } }
+            { name: 'test1', result: true },
+            { name: 'test2', result: false }
         ];
         expect(canCommit(scripts)).toBe(false);
     });

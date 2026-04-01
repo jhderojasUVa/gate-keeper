@@ -29,7 +29,7 @@ describe('State Management', () => {
         expect(STATE.scripts).toContain(result);
     });
 
-    it('should get result by title', () => {
+    it('should get result by name', () => {
         const result = { name: 'test', result: 'passed' };
         STATE.addResult(result);
         expect(STATE.getResult('test')).toEqual(result);

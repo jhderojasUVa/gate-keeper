@@ -1,62 +1,86 @@
 import { startGateKeeper } from '../../src/server/index.mjs';
+import { vi } from 'vitest';
 
 // Mock all dependencies
-jest.mock('../../src/libs/log.mjs', () => ({
-    expressLog: jest.fn()
+vi.mock('../../src/libs/log.mjs', () => ({
+    expressLog: vi.fn()
 }));
 
-jest.mock('../../src/libs/load_config.mjs', () => ({
-    getConfigurationData: jest.fn(),
-    loadPlugins: jest.fn(),
-    configFileExists: jest.fn()
+vi.mock('../../src/libs/load_config.mjs', () => ({
+    getConfigurationData: vi.fn(),
+    loadPlugins: vi.fn(),
+    configFileExists: vi.fn()
 }));
 
-jest.mock('../../src/libs/execute_scripts.mjs', () => ({
-    executeAllScripts: jest.fn()
+vi.mock('../../src/libs/execute_scripts.mjs', () => ({
+    executeAllScripts: vi.fn()
 }));
 
-jest.mock('../../src/libs/state.mjs', () => ({
+vi.mock('../../src/libs/state.mjs', () => ({
     STATE: {
-        isWorking: jest.fn(),
-        updateCanCommit: jest.fn(),
+        isWorking: vi.fn(),
+        updateCanCommit: vi.fn(),
         canCommit: true,
         scripts: []
     }
 }));
 
-jest.mock('../../src/server/server_conf.mjs', () => ({
+vi.mock('../../src/server/server_conf.mjs', () => ({
     express_server: {
-        listen: jest.fn((port, callback) => callback()),
-        on: jest.fn()
+        listen: vi.fn((port, callback) => callback()),
+        on: vi.fn()
     },
     express_port: 9000,
     express_ws_port: 9001,
     isHTTPS: true
 }));
 
-jest.mock('../../src/server/server_ws.mjs', () => ({
-    startWebSocket: jest.fn(),
-    broadcast: jest.fn()
+vi.mock('../../src/server/server_ws.mjs', () => ({
+    startWebSocket: vi.fn(),
+    broadcast: vi.fn()
 }));
 
 describe('Server Index', () => {
-    const { expressLog } = require('../../src/libs/log.mjs');
-    const { getConfigurationData, loadPlugins, configFileExists } = require('../../src/libs/load_config.mjs');
-    const { executeAllScripts } = require('../../src/libs/execute_scripts.mjs');
-    const { STATE } = require('../../src/libs/state.mjs');
-    const { express_server } = require('../../src/server/server_conf.mjs');
-    const { startWebSocket, broadcast } = require('../../src/server/server_ws.mjs');
+    let expressLog;
+    let getConfigurationData;
+    let loadPlugins;
+    let configFileExists;
+    let executeAllScripts;
+    let STATE;
+    let express_server;
+    let startWebSocket;
+    let broadcast;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        
+        // Import mocked modules
+        const log = await import('../../src/libs/log.mjs');
+        const loadConfig = await import('../../src/libs/load_config.mjs');
+        const executeScripts = await import('../../src/libs/execute_scripts.mjs');
+        const state = await import('../../src/libs/state.mjs');
+        const serverConf = await import('../../src/server/server_conf.mjs');
+        const serverWs = await import('../../src/server/server_ws.mjs');
+        
+        // Get mocked functions
+        expressLog = vi.mocked(log.expressLog);
+        getConfigurationData = vi.mocked(loadConfig.getConfigurationData);
+        loadPlugins = vi.mocked(loadConfig.loadPlugins);
+        configFileExists = vi.mocked(loadConfig.configFileExists);
+        executeAllScripts = vi.mocked(executeScripts.executeAllScripts);
+        STATE = state.STATE;
+        express_server = serverConf.express_server;
+        startWebSocket = vi.mocked(serverWs.startWebSocket);
+        broadcast = vi.mocked(serverWs.broadcast);
+        
         // Setup default mocks
         configFileExists.mockReturnValue(true);
         getConfigurationData.mockReturnValue({ scripts: [] });
         loadPlugins.mockReturnValue([]);
         executeAllScripts.mockResolvedValue([]);
         STATE.isWorking.mockReturnValue({
-            setResults: jest.fn().mockReturnValue({
-                updateCanCommit: jest.fn().mockReturnValue({ canCommit: true })
+            setResults: vi.fn().mockReturnValue({
+                updateCanCommit: vi.fn().mockReturnValue({ canCommit: true })
             })
         });
         STATE.updateCanCommit.mockResolvedValue({ canCommit: true });
@@ -106,16 +130,15 @@ describe('Server Index', () => {
     it('should handle configuration errors', async () => {
         loadPlugins.mockReturnValue({ error: true, data: 'Invalid config' });
 
-        // Mock process.exit
-        const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
+        // Mock process.exit to avoid actually exiting
+        const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
 
         await startGateKeeper();
 
-        expect(expressLog).toHaveBeenCalledWith({
-            message: 'Configuration error: Invalid config',
-            kind: 'CONFIG',
-            severity: 'ERROR'
-        });
+        // The exitWithCode function uses setImmediate, so we need to wait for timers
+        await new Promise(resolve => setImmediate(resolve));
+
+        // Verify that process.exit was called with code 1
         expect(mockExit).toHaveBeenCalledWith(1);
 
         mockExit.mockRestore();

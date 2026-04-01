@@ -24,7 +24,7 @@ class State {
 
     // Get one by title
     getResult(scriptTitle) {
-        return this.scripts.find((script) => script.title === scriptTitle);
+        return this.scripts.find((script) => script.name === scriptTitle);
     }
 
     // Replace
@@ -47,7 +47,7 @@ class State {
         this.scripts.forEach((script, index) => {
             // remove
             if (script.name === name) {
-                this.scripts.slice(index, 1)
+                this.scripts.splice(index, 1)
             }
         });
 
