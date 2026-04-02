@@ -7,6 +7,7 @@
 // Import necessary modules
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import path from 'path';
 
 // Import message types
 import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
@@ -26,10 +27,7 @@ const log = (msg) => {
  * @param {number} code - Exit code
  */
 const exitWithCode = (code) => {
-    // Use setImmediate to ensure all IO is flushed before exit
-    setImmediate(() => {
-        process.exit(code);
-    });
+    process.exit(code);
 };
 
 /**
@@ -150,7 +148,10 @@ export const openClient = async () => {
  */
 export const showVersion = () => {
     try {
-        const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+        // Get the directory of the current module
+        const currentDir = path.dirname(fileURLToPath(import.meta.url));
+        const packageJsonPath = path.resolve(currentDir, '../../package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         log(`Gate Keeper v${packageJson.version}`);
     } catch (error) {
         log('Gate Keeper (version unknown)');

@@ -2,6 +2,7 @@
 
 // Gate-keeper initialization tool
 import fs from 'fs';
+import path from 'path';
 import { __dirname } from './libs/app_utils.mjs';
 // Libs
 import { configFileExists } from './libs/load_config.mjs';
@@ -54,8 +55,12 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
  */
 export const showVersion = () => {
     try {
-        const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+        // Get the directory of the current module
+        const currentDir = path.dirname(fileURLToPath(import.meta.url));
+        const packageJsonPath = path.resolve(currentDir, '../../package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         log(`Gate Keeper v${packageJson.version}`);
+        process.exit(0);
     } catch (error) {
         log('Gate Keeper (version unknown)');
     }

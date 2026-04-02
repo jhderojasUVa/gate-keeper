@@ -1,5 +1,6 @@
 import { startGateKeeper, toWindowsPath, isWSL, showHelp, showVersion } from '../../src/server/index.mjs';
 import { vi } from 'vitest';
+import fs from 'fs';
 
 // Mock all dependencies
 vi.mock('../../src/libs/log.mjs', () => ({
@@ -45,6 +46,11 @@ vi.mock('../../src/terminal/client-terminal.mjs', () => ({
     startTerminalClient: vi.fn()
 }), { virtual: true });
 
+// Mock fs for showVersion
+vi.mock('fs', () => ({
+    readFileSync: vi.fn()
+}));
+
 describe('Server Index', () => {
     let expressLog;
     let getConfigurationData;
@@ -58,6 +64,9 @@ describe('Server Index', () => {
 
     beforeEach(async () => {
         vi.clearAllMocks();
+        
+        // Mock fs.readFileSync for showVersion
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));
         
         // Import mocked modules
         const log = await import('../../src/libs/log.mjs');
@@ -173,7 +182,7 @@ describe('Server Index', () => {
 
         showVersion();
 
-        expect(consoleLogMock).toHaveBeenCalled();
+        expect(consoleLogMock).toHaveBeenCalledWith('Gate Keeper v1.0.0');
 
         consoleLogMock.mockRestore();
     });
