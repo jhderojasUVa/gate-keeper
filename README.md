@@ -4,6 +4,33 @@ Working on trunk development with JS or TS? This tool is the first line of defen
 
 For detailed instructions on how to install and run the application, see [HOW_TO.md](HOW_TO.md).
 
+## Usage
+
+Gate Keeper provides both server and client modes:
+
+- **Server Mode**: Start the background service that monitors code quality
+- **Web Client**: Open the graphical web interface in a browser
+- **Terminal Client**: Open the terminal-based interface for command-line users
+
+### Commands
+
+```bash
+# Start the Gate Keeper server
+gate-keeper server
+
+# Start server and automatically open web client
+gate-keeper server --open
+
+# Open the graphical web client
+gate-keeper client
+
+# Open the terminal client
+gate-keeper client-terminal
+
+# Show help
+gate-keeper --help
+```
+
 # Libraries used
 
 - Vitest: Unit testing
@@ -27,6 +54,8 @@ This application is a background application that contains a web server and a we
 
 The websocket protocol enables bidirectional communication between the server and client, allowing real-time updates on script execution status and immediate feedback on code quality checks. The web interface provides a user-friendly dashboard to monitor and manage the gate-keeper service.
 
+Additionally, a terminal-based client is available for users who prefer command-line interfaces. The terminal client provides the same real-time monitoring capabilities as the web interface, displaying commit status and system logs directly in the terminal using a text-based UI.
+
 # Env var configuration
 
 You can configure the server by passing this environmental variables:
@@ -38,6 +67,8 @@ You can configure the server by passing this environmental variables:
 # Websocket messages
 
 The websocket communication follows a request-response pattern. Clients can send messages to trigger script executions, request status updates, and receive real-time notifications about the processing status. Common message types include script execution requests, status queries, and result notifications.
+
+Both the web and terminal clients connect to the same websocket endpoint to receive live updates about code quality checks and commit permissions.
 
 ## AI Agents Integration
 
