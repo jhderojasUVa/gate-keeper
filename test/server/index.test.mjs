@@ -40,6 +40,11 @@ vi.mock('../../src/server/server_ws.mjs', () => ({
     broadcast: vi.fn()
 }));
 
+// Mock the terminal client
+vi.mock('../../src/terminal/client-terminal.mjs', () => ({
+    startTerminalClient: vi.fn()
+}), { virtual: true });
+
 describe('Server Index', () => {
     let expressLog;
     let getConfigurationData;
@@ -179,6 +184,18 @@ describe('Server Index', () => {
         showHelp();
 
         expect(consoleLogMock).toHaveBeenCalled();
+
+        consoleLogMock.mockRestore();
+    });
+
+    it('should include client-terminal in help text', () => {
+        const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        showHelp();
+
+        expect(consoleLogMock).toHaveBeenCalledWith(
+            expect.stringContaining('client-terminal  Open the terminal client')
+        );
 
         consoleLogMock.mockRestore();
     });

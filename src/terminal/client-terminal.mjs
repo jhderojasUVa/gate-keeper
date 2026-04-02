@@ -218,6 +218,11 @@ const connectWebSocket = (wsUrl) => {
  * Initializes the terminal UI
  */
 const initUI = () => {
+    // Skip UI initialization in test environment
+    if (typeof process !== 'undefined' && process.env.VITEST) {
+        return;
+    }
+
     // Create screen
     screen = blessed.screen({
         smartCSR: true,
@@ -358,6 +363,11 @@ export const startTerminalClient = async (options = {}) => {
     updateCommitStatus(canCommit);
 
     updateStatusMessage('✅ Terminal client started. Press q or Ctrl+C to exit.');
+};
+
+// Run if executed directly (skip in test environment)
+if (import.meta.url === `file://${process.argv[1]}` && !(typeof process !== 'undefined' && process.env.VITEST)) {
+    startTerminalClient();
 };
 
 // Run if executed directly
