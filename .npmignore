@@ -1,0 +1,12 @@
+# Ignore test files when publishing
+/test/
+**/test/
+**/*.test.js
+**/*.test.mjs
+**/__tests__/
+
+# Optionally ignore config for local development if desired
+# .vscode/
+# .git/
+
+# Keep everything else in package
