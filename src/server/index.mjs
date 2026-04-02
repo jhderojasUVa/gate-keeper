@@ -75,8 +75,9 @@ Gate Keeper - Code Quality Guardian
 Usage: gate-keeper <command> [options]
 
 Commands:
-  server        Start the Gate Keeper server
-  client        Open the graphical client in a browser
+  server           Start the Gate Keeper server
+  client           Open the graphical client in a browser
+  client-terminal  Open the terminal client
 
 Options:
   --help, -h    Show this help message
@@ -92,6 +93,7 @@ Examples:
   gate-keeper server              Start the server
   gate-keeper server --open       Start and open browser
   gate-keeper client              Open graphical client in browser
+  gate-keeper client-terminal     Open terminal client
   GATE_KEEPER_PORT=8080 gate-keeper server  Start on port 8080
 
 For more information, see: https://github.com/jhderojasUVa/gate-keeper
@@ -324,7 +326,7 @@ if (isMainModule) {
         exitWithCode(1);
     }
 
-    // Determine the mode: server or client
+    // Determine the mode: server, client, or client-terminal
     let mode = null;
     let modeIndex = -1;
     
@@ -334,6 +336,9 @@ if (isMainModule) {
     } else if (args.includes('client')) {
         mode = 'client';
         modeIndex = args.indexOf('client');
+    } else if (args.includes('client-terminal')) {
+        mode = 'client-terminal';
+        modeIndex = args.indexOf('client-terminal');
     } else {
         // Invalid command provided
         log(`❌ Unknown command: ${args[0]}`);
@@ -350,8 +355,12 @@ if (isMainModule) {
 
     const openBrowser = options.includes('--open');
 
-    // Check for invalid arguments
-    const validOptions = ['--open'];
+    // Check for invalid arguments based on mode
+    let validOptions = [];
+    if (mode === 'server') {
+        validOptions = ['--open'];
+    } // client and client-terminal have no options
+
     const invalidArgs = options.filter(arg => !validOptions.includes(arg));
     if (invalidArgs.length > 0) {
         log(`❌ Unknown argument(s): ${invalidArgs.join(', ')}`);
@@ -365,6 +374,19 @@ if (isMainModule) {
             log('⚠️  --open flag ignored in client mode');
         }
         openClient();
+    } else if (mode === 'client-terminal') {
+        // Terminal client mode: start the terminal client
+        if (openBrowser) {
+            log('⚠️  --open flag ignored in client-terminal mode');
+        }
+        (async () => {
+            try {
+                const { startTerminalClient } = await import('../terminal/client-terminal.mjs');
+                await startTerminalClient();
+            } catch (error) {
+                exitWithCode(1);
+            }
+        })();
     } else {
         // Server mode: start the server (and optionally open browser)
         (async () => {
