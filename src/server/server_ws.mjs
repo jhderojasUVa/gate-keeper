@@ -11,15 +11,8 @@ import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
 // State machine
 import { STATE as GATE_KEEPER_STATE } from '../libs/state.mjs';
 
-// Websocket creation
-const wss = new WebSocketServer({
-    port: express_ws_port,
-    concurrencyLimit: 2,
-    threshold: 1024
-});
-
 // Keep track of connected clients
-const clients = new Set();
+export const clients = new Set();
 
 // Broadcast function to send messages to all connected clients
 export const broadcast = (message) => {
@@ -40,6 +33,12 @@ export const broadcast = (message) => {
 };
 
 export const startWebSocket = () => {
+    const wss = new WebSocketServer({
+        port: express_ws_port,
+        concurrencyLimit: 2,
+        threshold: 1024
+    });
+
     expressLog({
         message: `Websocket server started at ${process.env.GATE_KEEPER_HTTPS === 'false' ? 'ws': 'wss'}://localhost:${express_ws_port}`,
         kind: 'WEB SOCKET',
@@ -88,7 +87,7 @@ export const startWebSocket = () => {
         // Socket events
         ws.on('message', (rawMessage) => {
             expressLog({
-                message: `Message received: ${message}`,
+                message: `Message received: ${rawMessage}`,
                 kind: 'WEB SOCKET',
                 severity: 'INFO',
             });

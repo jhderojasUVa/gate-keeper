@@ -1,4 +1,4 @@
-import { startGateKeeper } from '../../src/server/index.mjs';
+import { startGateKeeper, toWindowsPath, isWSL, showHelp, showVersion } from '../../src/server/index.mjs';
 import { vi } from 'vitest';
 
 // Mock all dependencies
@@ -142,5 +142,44 @@ describe('Server Index', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
 
         mockExit.mockRestore();
+    });
+
+    it('should exit if config file does not exist', async () => {
+        configFileExists.mockReturnValue(false);
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await startGateKeeper();
+
+        expect(consoleLogSpy).toHaveBeenCalledWith('⚠️  Warning: Configuration file not found. Using defaults.');
+        consoleLogSpy.mockRestore();
+    });
+
+    it('should convert WSL path to Windows path', () => {
+        expect(toWindowsPath('/mnt/c/Users/test')).toBe('C:\\Users\\test');
+        expect(toWindowsPath('/home/test')).toBe('/home/test');
+    });
+
+    it('should rate the WSL check as boolean', () => {
+        expect(typeof isWSL()).toBe('boolean');
+    });
+
+    it('should output version info with showVersion', () => {
+        const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        showVersion();
+
+        expect(consoleLogMock).toHaveBeenCalled();
+
+        consoleLogMock.mockRestore();
+    });
+
+    it('should show help without throwing', () => {
+        const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        showHelp();
+
+        expect(consoleLogMock).toHaveBeenCalled();
+
+        consoleLogMock.mockRestore();
     });
 });

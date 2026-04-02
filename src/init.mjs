@@ -24,7 +24,7 @@ const log = (msg) => {
 /**
  * Shows help information
  */
-const showHelp = () => {
+export const showHelp = () => {
     log(`
 Gate Keeper Init - Configuration Setup
 
@@ -52,7 +52,7 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
 /**
  * Shows version information
  */
-const showVersion = () => {
+export const showVersion = () => {
     try {
         const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
         log(`Gate Keeper v${packageJson.version}`);

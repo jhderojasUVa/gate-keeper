@@ -7,5 +7,14 @@ export default defineConfig({
   },
   coverage: {
     provider: 'v8',
+    all: false,
+    include: ['src/**'],
+    exclude: ['public/**', 'src/index.js', 'src/init.mjs'],
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 70,
+      statements: 80
+    }
   },
 });

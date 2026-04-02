@@ -1,5 +1,5 @@
 // Get the WebSocket port from the server
-const getWsPort = async () => {
+export const getWsPort = async () => {
     try {
         const response = await fetch('/ws-port');
         const data = await response.json();
@@ -10,12 +10,12 @@ const getWsPort = async () => {
     }
 };
 
-const formatTime = () => {
+export const formatTime = () => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
 };
 
-const createLogElement = (messageObj) => {
+export const createLogElement = (messageObj) => {
     const logEl = document.createElement('div');
     
     // Check if error
@@ -45,7 +45,7 @@ const createLogElement = (messageObj) => {
 };
 
 // Connect to the WebSocket
-const connectToWs = async () => {
+export const connectToWs = async () => {
     const port = await getWsPort();
     const wsUrl = `ws://${window.location.hostname}:${port}`;
     let ws;
@@ -143,7 +143,7 @@ const connectToWs = async () => {
 };
 
 // Check if user can commit and update the UI
-const updateCommitStatus = async (commitStatusDiv, canCommitOverride) => {
+export const updateCommitStatus = async (commitStatusDiv, canCommitOverride) => {
     const titleObj = document.getElementById('commit-status-title');
     const descObj = document.getElementById('commit-status-desc');
 
@@ -184,5 +184,7 @@ const updateCommitStatus = async (commitStatusDiv, canCommitOverride) => {
     }
 };
 
-// Start the connection
-connectToWs();
+// Start the connection, but skip in test environment
+if (typeof window !== 'undefined' && typeof document !== 'undefined' && !(typeof process !== 'undefined' && process.env.VITEST)) {
+    connectToWs();
+}

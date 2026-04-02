@@ -38,7 +38,7 @@ const exitWithCode = (code) => {
  * @param {string} linuxPath - The Linux path
  * @returns {string} The Windows path
  */
-const toWindowsPath = (linuxPath) => {
+export const toWindowsPath = (linuxPath) => {
     if (!linuxPath.startsWith('/mnt/')) {
         return linuxPath;
     }
@@ -56,7 +56,7 @@ const toWindowsPath = (linuxPath) => {
  * Detects if running in WSL (Windows Subsystem for Linux)
  * @returns {boolean} True if running in WSL
  */
-const isWSL = () => {
+export const isWSL = () => {
     try {
         const releaseInfo = fs.readFileSync('/proc/version', 'utf8').toLowerCase();
         return releaseInfo.includes('microsoft') || releaseInfo.includes('wsl');
@@ -68,7 +68,7 @@ const isWSL = () => {
 /**
  * Shows help information
  */
-const showHelp = () => {
+export const showHelp = () => {
     log(`
 Gate Keeper - Code Quality Guardian
 
@@ -103,7 +103,7 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
  * @async
  * @returns {Promise<void>}
  */
-const openClient = async () => {
+export const openClient = async () => {
     try {
         const { exec } = await import('child_process');
         
@@ -146,7 +146,7 @@ const openClient = async () => {
 /**
  * Shows version information
  */
-const showVersion = () => {
+export const showVersion = () => {
     try {
         const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
         log(`Gate Keeper v${packageJson.version}`);

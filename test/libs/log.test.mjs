@@ -56,6 +56,18 @@ describe('Logging', () => {
         );
     });
 
+    it('should log WARNING messages', () => {
+        expressLog({
+            message: 'Warning message',
+            kind: 'TEST',
+            severity: 'WARNING'
+        });
+
+        expect(consoleLogMock).toHaveBeenCalledWith(
+            expect.stringContaining('Warning message')
+        );
+    });
+
     it('should handle missing severity', () => {
         expressLog({
             message: 'Test message',
