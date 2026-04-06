@@ -62,6 +62,7 @@ export const showVersion = () => {
         log(`Gate Keeper v${packageJson.version}`);
         process.exit(0);
     } catch (error) {
+        console.error('Failed to read package.json:', error);
         log('Gate Keeper (version unknown)');
     }
 };

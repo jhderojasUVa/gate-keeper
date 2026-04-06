@@ -37,7 +37,6 @@ describe('Terminal Client', () => {
     let mockScreen;
     let mockStatusBox;
     let mockLogBox;
-    let mockWsStatusBox;
     let mockStatusMessageBox;
 
     beforeEach(() => {
@@ -60,10 +59,6 @@ describe('Terminal Client', () => {
             setScrollPerc: vi.fn()
         };
 
-        mockWsStatusBox = {
-            setContent: vi.fn()
-        };
-
         mockStatusMessageBox = {
             setContent: vi.fn()
         };
@@ -80,11 +75,6 @@ describe('Terminal Client', () => {
                 const headerBox = {
                     append: vi.fn()
                 };
-                headerBox.append.mockImplementation((box) => {
-                    if (box.content && box.content.includes('Connecting')) {
-                        mockWsStatusBox = box;
-                    }
-                });
                 return headerBox;
             } else {
                 return mockStatusMessageBox;

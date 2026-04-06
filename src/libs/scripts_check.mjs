@@ -20,4 +20,4 @@ export const canCommit = (scripts) => {
     });
 
     return canCommit;
-}
+};

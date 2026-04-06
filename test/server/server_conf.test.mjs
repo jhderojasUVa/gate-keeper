@@ -1,10 +1,5 @@
 import request from 'supertest';
 import { express_app, express_port, express_ws_port, isHTTPS } from '../../src/server/server_conf.mjs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 describe('Server Configuration', () => {
     it('should configure express_port and express_ws_port', () => {

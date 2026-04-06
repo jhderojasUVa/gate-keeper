@@ -8,4 +8,4 @@
 export const scriptResult = {
     success: false,
     data: undefined,
-}
+};

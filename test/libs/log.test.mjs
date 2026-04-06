@@ -84,7 +84,6 @@ describe('Logging', () => {
     });
 
     it('should format log messages correctly', () => {
-        const now = new Date();
         expressLog({
             message: 'Test message',
             kind: 'TEST',

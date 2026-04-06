@@ -4,7 +4,6 @@ import { expressLog } from '../libs/log.mjs';
 import { express_ws_port } from './server_conf.mjs';
 // Messages
 import * as WebSocketResponses from './responses/server_responses.mjs';
-import * as WebSocketRequest from './requests/server_request.mjs';
 import { WSResponse } from './response.interface.mjs';
 // Constants
 import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';

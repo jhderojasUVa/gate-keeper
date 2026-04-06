@@ -58,7 +58,6 @@ describe('Server Index', () => {
     let configFileExists;
     let executeAllScripts;
     let STATE;
-    let express_server;
     let startWebSocket;
     let broadcast;
 
@@ -73,7 +72,6 @@ describe('Server Index', () => {
         const loadConfig = await import('../../src/libs/load_config.mjs');
         const executeScripts = await import('../../src/libs/execute_scripts.mjs');
         const state = await import('../../src/libs/state.mjs');
-        const serverConf = await import('../../src/server/server_conf.mjs');
         const serverWs = await import('../../src/server/server_ws.mjs');
         
         // Get mocked functions
@@ -83,7 +81,6 @@ describe('Server Index', () => {
         configFileExists = vi.mocked(loadConfig.configFileExists);
         executeAllScripts = vi.mocked(executeScripts.executeAllScripts);
         STATE = state.STATE;
-        express_server = serverConf.express_server;
         startWebSocket = vi.mocked(serverWs.startWebSocket);
         broadcast = vi.mocked(serverWs.broadcast);
         
