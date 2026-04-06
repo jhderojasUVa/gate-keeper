@@ -1,5 +1,7 @@
 ---
+name: Coder
 description: AI Agent identity and instructions for coding tasks
+tools: ['search/codebase']
 ---
 
 # Coder Agent
