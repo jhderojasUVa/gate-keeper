@@ -1,5 +1,13 @@
-import { startGateKeeper, toWindowsPath, isWSL, showHelp, showVersion } from '../../src/server/index.mjs';
 import { vi } from 'vitest';
+
+// Mock process before importing anything
+vi.stubGlobal('process', {
+    ...global.process,
+    argv: ['node', 'gate-keeper', 'server'],
+    exit: vi.fn()
+});
+
+import { startGateKeeper, toWindowsPath, isWSL, showHelp, showVersion } from '../../src/server/index.mjs';
 import fs from 'fs';
 
 // Mock all dependencies
@@ -46,6 +54,17 @@ vi.mock('../../src/terminal/client-terminal.mjs', () => ({
     startTerminalClient: vi.fn().mockResolvedValue()
 }));
 
+// Mock server_conf
+vi.mock('../../src/server/server_conf.mjs', () => ({
+    express_app: {},
+    express_port: 9000,
+    express_ws_port: 9001,
+    isHTTPS: true,
+    express_server: {
+        listen: vi.fn((port, callback) => callback())
+    }
+}));
+
 // Mock fs for showVersion
 vi.mock('fs', () => ({
     readFileSync: vi.fn()
@@ -66,9 +85,6 @@ describe('Server Index', () => {
         
         // Mock fs.readFileSync for showVersion
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));
-        
-        // Mock process.exit
-        vi.spyOn(process, 'exit').mockImplementation(() => undefined);
         
         // Import mocked modules
         const log = await import('../../src/libs/log.mjs');
@@ -101,7 +117,7 @@ describe('Server Index', () => {
     });
 
     it('should start the server successfully', async () => {
-        await startGateKeeper(['server']);
+        await startGateKeeper();
 
         expect(expressLog).toHaveBeenCalledWith({
             message: 'HTTPS server started at https://localhost:9000',
