@@ -3,7 +3,6 @@ import { vi } from 'vitest';
 // Mock process before importing anything
 vi.stubGlobal('process', {
     ...global.process,
-    argv: ['node', 'gate-keeper', 'server'],
     exit: vi.fn()
 });
 
@@ -82,6 +81,9 @@ describe('Server Index', () => {
 
     beforeEach(async () => {
         vi.clearAllMocks();
+        
+        // Mock process.argv for the test
+        process.argv = ['node', 'gate-keeper', 'server'];
         
         // Mock fs.readFileSync for showVersion
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));

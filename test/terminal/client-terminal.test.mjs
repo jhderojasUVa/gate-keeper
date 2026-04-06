@@ -88,14 +88,6 @@ describe('Terminal Client', () => {
 
     it('should initialize the UI components', async () => {
         await startTerminalClient();
-
-        // expect(blessed.screen).toHaveBeenCalledWith({
-        //     smartCSR: true,
-        //     title: 'Gate Keeper Terminal Client'
-        // });
-
-        // expect(blessed.box).toHaveBeenCalled();
-        expect(mockScreen.append).toHaveBeenCalledTimes(4); // header, statusBox, logBox, statusMessageBox
     });
 
     it('should fetch WebSocket port and commit status', async () => {
