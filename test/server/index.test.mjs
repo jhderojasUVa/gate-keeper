@@ -43,8 +43,8 @@ vi.mock('../../src/server/server_ws.mjs', () => ({
 
 // Mock the terminal client
 vi.mock('../../src/terminal/client-terminal.mjs', () => ({
-    startTerminalClient: vi.fn()
-}), { virtual: true });
+    startTerminalClient: vi.fn().mockResolvedValue()
+}));
 
 // Mock fs for showVersion
 vi.mock('fs', () => ({
@@ -66,6 +66,9 @@ describe('Server Index', () => {
         
         // Mock fs.readFileSync for showVersion
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));
+        
+        // Mock process.exit
+        vi.spyOn(process, 'exit').mockImplementation(() => undefined);
         
         // Import mocked modules
         const log = await import('../../src/libs/log.mjs');
@@ -98,7 +101,7 @@ describe('Server Index', () => {
     });
 
     it('should start the server successfully', async () => {
-        await startGateKeeper();
+        await startGateKeeper(['server']);
 
         expect(expressLog).toHaveBeenCalledWith({
             message: 'HTTPS server started at https://localhost:9000',

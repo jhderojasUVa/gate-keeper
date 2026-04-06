@@ -3,7 +3,7 @@
 // Gate Keeper Terminal Client
 // Provides a terminal-based interface to monitor Gate Keeper status and logs
 
-import blessed from 'blessed';
+import * as blessed from 'blessed';
 import { WebSocket } from 'ws';
 import { colors } from '../libs/colors.mjs';
 

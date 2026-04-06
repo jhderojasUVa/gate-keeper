@@ -38,7 +38,7 @@ describe('Server Configuration', () => {
     });
 
     it('should serve JavaScript files', async () => {
-        const response = await request(express_app).get('/js/main.js');
+        const response = await request(express_app).get('/js/main.mjs');
         expect(response.status).toBe(200);
         expect(response.type).toBe('application/javascript');
     });
