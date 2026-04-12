@@ -1,108 +1,102 @@
-name: Publish Package to GitHub Packages
+name: Release
 
 on:
   push:
-    branches:
-      - main
-
-concurrency:
-  group: publish-main
-  cancel-in-progress: false
+    branches: [main]
 
 permissions:
-  contents: read
-  packages: write
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish Package
+  release:
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
 
     steps:
-      - name: Checkout code
+      - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
-      - name: Set up Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@jhderojasUVa"
-          always-auth: true
+          node-version: 20
+          cache: npm
+          registry-url: https://npm.pkg.github.com
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
-      - name: Lint code
-        run: npm run lint
+      - name: Test
+        run: npm test
 
-      - name: Run tests
-        run: npm run test
-
-      - name: Read package metadata
-        id: pkg
-        shell: bash
-        run: |
-          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
-          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Check if package version already exists
-        id: package_check
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE: ${{ steps.pkg.outputs.name }}
-          VERSION: ${{ steps.pkg.outputs.version }}
-        run: |
-          set -euo pipefail
-
-          set +e
-          OUTPUT=$(npm view "${PACKAGE}@${VERSION}" version --registry=https://npm.pkg.github.com 2>&1)
-          STATUS=$?
-          set -e
-
-          if [ "$STATUS" -eq 0 ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Package version already exists: ${PACKAGE}@${VERSION}"
-            exit 0
-          fi
-
-          if echo "$OUTPUT" | grep -Eq "E404|404 Not Found|not found"; then
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Package version not found: ${PACKAGE}@${VERSION}"
-            exit 0
-          fi
-
-          echo "$OUTPUT"
-          echo "Unexpected error while checking package version."
-          exit 1
-
-      - name: Check for releasable conventional commits
-        if: steps.package_check.outputs.exists == 'false'
-        id: conventional_commits
+      - name: Detect release type from conventional commits
+        id: detect
         shell: bash
         run: |
           set -euo pipefail
 
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
-          if [ -z "$LAST_TAG" ]; then
-            COMMITS=$(git log HEAD --pretty=format:"%s")
-          else
-            COMMITS=$(git log "${LAST_TAG}..HEAD" --pretty=format:"%s")
+          LAST_TAG="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || true)"
+          RANGE="${LAST_TAG:+${LAST_TAG}..}HEAD"
+
+          # Subject + body, commit-delimited
+          LOG="$(git log --format='%s%n%b%n<<<END>>>' "${RANGE}")"
+
+          # Avoid release loops from generated release commits
+          FILTERED="$(printf '%s\n' "${LOG}" | awk '
+            BEGIN { RS="<<<END>>>\n"; ORS="\n<<<END>>>\n" }
+            $0 !~ /^chore\(release\):/ { print }
+          ')"
+
+          TYPE="none"
+          # Guard: if FILTERED is empty (all commits were chore(release)), keep TYPE=none
+          if [ -z "$(echo "${FILTERED}" | tr -d '[:space:]')" ]; then
+            TYPE="none"
+          elif printf '%s\n' "${FILTERED}" | grep -Eiq '(^[a-z]+\([^)]+\))?!:)|(^|[[:space:]])BREAKING CHANGE:'; then
+            TYPE="major"
+          elif printf '%s\n' "${FILTERED}" | grep -Eq '^feat(\([^)]+\))?:'; then
+            TYPE="minor"
+          elif printf '%s\n' "${FILTERED}" | grep -Eq '^(fix|perf|refactor|revert)(\([^)]+\))?:'; then
+            TYPE="patch"
           fi
 
-          if echo "$COMMITS" | grep -Eq '^(feat|fix)(\([^)]*\))?!?:'; then
-            echo "has_releasable_commits=true" >> "$GITHUB_OUTPUT"
-            echo "Releasable conventional commits found."
-          else
-            echo "has_releasable_commits=false" >> "$GITHUB_OUTPUT"
-            echo "No releasable conventional commits found."
+          echo "release_type=${TYPE}" >> "$GITHUB_OUTPUT"
+          echo "Detected release_type=${TYPE}"
+
+      - name: Check if last commit is already chore(release)
+        if: always()
+        run: |
+          set -euo pipefail
+          LAST_COMMIT="$(git log -1 --format='%s')"
+          if [[ "${LAST_COMMIT}" =~ ^chore\(release\): ]]; then
+            echo "Last commit is already a chore(release). Skipping release step."
+            exit 0
           fi
 
-      - name: Publish to GitHub Packages
-        if: steps.package_check.outputs.exists == 'false' && steps.conventional_commits.outputs.has_releasable_commits == 'true'
-        run: npm publish --registry=https://npm.pkg.github.com
+      - name: Run standard-version with selected bump
+        if: steps.detect.outputs.release_type != 'none'
+        run: npm run release:${{ steps.detect.outputs.release_type }}
+
+      - name: Publish and push release
+        if: steps.detect.outputs.release_type != 'none'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          
+          # Only publish to npm if repository matches
+          if [ "${GITHUB_REPOSITORY}" = "jhderojasUVa/gate-keeper" ]; then
+            npm publish
+          fi
+          
+          # Configure git and push atomically with publish
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push origin main --follow-tags

@@ -1,6 +1,8 @@
 ---
 name: Tester
 description: AI Agent identity and instructions for testing tasks
+tools: [read, edit, execute, search, web, todo]
+user-invocable: true
 ---
 
 # Tester Agent
