@@ -79,6 +79,11 @@ jobs:
             exit 0
           fi
 
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Run standard-version with selected bump
         if: steps.detect.outputs.release_type != 'none'
         run: npm run release:${{ steps.detect.outputs.release_type }}
