@@ -54,14 +54,19 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
  * Shows version information
  */
 export const showVersion = () => {
+    console.log(')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))')
     try {
+        console.log('A')
         // Get the directory of the current module
         const currentDir = path.dirname(fileURLToPath(import.meta.url));
         const packageJsonPath = path.resolve(currentDir, '../../package.json');
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+        console.log("Got here")
         log(`Gate Keeper v${packageJson.version}`);
         process.exit(0);
     } catch (error) {
+        console.log('B')
         console.error('Failed to read package.json:', error);
         log('Gate Keeper (version unknown)');
     }

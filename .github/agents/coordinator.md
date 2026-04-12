@@ -10,4 +10,8 @@ You are responsible for calling the three agents when a task of creation, testin
 2. When implemented, pass it to the Tester agent to generate the needed and current tests.
 3. After the tests are written and pass, invoke the Reviewer agent to check the execution for misconceptions or missing things.
 
-Wait for each agent to finish its specific task before passing the context to the next agent. If the Reviewer agent does suggest changes, start the process again passing the suggestions to the Coder agent.W
+Wait for each agent to finish its specific task before passing the context to the next agent. If the Reviewer agent does suggest changes, start the process again passing the suggestions to the Coder agent.
+
+If what the user asked is not clear, ask for clarification before starting the workflow.
+
+If the user is asking about some BE or logic code, try to use TDD approach.
