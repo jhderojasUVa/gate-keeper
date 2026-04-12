@@ -64,4 +64,23 @@ describe('State Management', () => {
         expect(STATE.isWorking()).toBe(STATE);
         expect(STATE.inProgress).toBe(false);
     });
+
+    it('should set inProgress explicitly', () => {
+        expect(STATE.setWorking(true)).toBe(STATE);
+        expect(STATE.inProgress).toBe(true);
+        expect(STATE.setWorking(false)).toBe(STATE);
+        expect(STATE.inProgress).toBe(false);
+    });
+
+    it('should expose a full status snapshot', () => {
+        STATE.canCommit = true;
+        STATE.setWorking(true);
+        STATE.setResults([{ name: 'lint', result: 'ok' }]);
+
+        expect(STATE.getStatus()).toEqual({
+            canCommit: true,
+            inProgress: true,
+            scripts: [{ name: 'lint', result: 'ok' }]
+        });
+    });
 });

@@ -22,7 +22,15 @@ vi.mock('../../src/server/server_conf.mjs', () => ({
 }));
 
 vi.mock('../../src/libs/state.mjs', () => ({
-    STATE: { canCommit: true, scripts: [] }
+    STATE: {
+        canCommit: true,
+        scripts: [],
+        getStatus: vi.fn(() => ({
+            canCommit: true,
+            inProgress: false,
+            scripts: []
+        }))
+    }
 }));
 
 describe('WebSocket Server', () => {

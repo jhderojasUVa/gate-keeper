@@ -13,7 +13,11 @@ import { STATE as GATE_KEEPER_STATE } from '../libs/state.mjs';
 // Keep track of connected clients
 export const clients = new Set();
 
-// Broadcast function to send messages to all connected clients
+/**
+ * Broadcasts a payload to all currently connected WebSocket clients.
+ * @param {object} message - JSON-serializable message to send.
+ * @returns {void}
+ */
 export const broadcast = (message) => {
     const messageStr = JSON.stringify(message);
     clients.forEach(client => {
@@ -31,6 +35,10 @@ export const broadcast = (message) => {
     });
 };
 
+/**
+ * Starts the Gate Keeper WebSocket server and registers socket handlers.
+ * @returns {void}
+ */
 export const startWebSocket = () => {
     const wss = new WebSocketServer({
         port: express_ws_port,
@@ -65,12 +73,10 @@ export const startWebSocket = () => {
         });
 
         // Send current status after connection
+        // New clients immediately receive the latest server status snapshot.
         const currentStatus = {
             type: TYPES_MESSAGES.STATUS_UPDATE,
-            data: {
-                canCommit: GATE_KEEPER_STATE.canCommit,
-                scripts: GATE_KEEPER_STATE.scripts
-            },
+            data: GATE_KEEPER_STATE.getStatus(),
             success: true
         };
         ws.send(WSResponse(currentStatus), (error) => {

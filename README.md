@@ -62,7 +62,10 @@ You can configure the server by passing this environmental variables:
 
 - `GATE_KEEPER_PORT`: By default 9000
 - `GATE_KEEPER_WS_PORT`: By default 9001
+- `GATE_KEEPER_MCP_PORT`: By default 9002
 - `GATE_KEEPER_HTTPS`: Boolean, by default true
+
+When you start `gate-keeper server`, the process also exposes an MCP endpoint for AI agents at `http://127.0.0.1:9002/mcp` by default. The MCP tool `get_gate_keeper_status` returns whether Gate Keeper is still running scripts, whether the user can commit, and the current script results.
 
 # Websocket messages
 
