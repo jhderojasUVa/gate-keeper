@@ -1,6 +1,8 @@
 ---
 name: Reviewer
 description: AI Agent identity and instructions for the code reviewer
+tools: [read, search, web, todo]
+user-invocable: false
 ---
 
 # Reviewer Agent
