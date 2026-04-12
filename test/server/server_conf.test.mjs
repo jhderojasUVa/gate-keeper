@@ -18,6 +18,15 @@ describe('Server Configuration', () => {
         expect(typeof response.body.cancommit).toBe('boolean');
     });
 
+    it('GET /status should return full server state', async () => {
+        const response = await request(express_app).get('/status');
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('canCommit');
+        expect(response.body).toHaveProperty('inProgress');
+        expect(response.body).toHaveProperty('scripts');
+        expect(Array.isArray(response.body.scripts)).toBe(true);
+    });
+
     it('GET /ws-port should return configured ws port', async () => {
         const response = await request(express_app).get('/ws-port');
         expect(response.status).toBe(200);

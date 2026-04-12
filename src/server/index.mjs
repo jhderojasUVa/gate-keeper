@@ -18,6 +18,11 @@ const currentFilePath = fileURLToPath(currentFileUrl);
 const isMainModule = process.argv[1].includes('gate-keeper') || process.argv[1] === currentFilePath;
 
 // Ensure stdout is flushed immediately
+/**
+ * Writes a log line to stdout.
+ * @param {string} msg - Message to print.
+ * @returns {void}
+ */
 const log = (msg) => {
     console.log(msg);
 };
@@ -85,6 +90,7 @@ Options:
 Environment Variables:
   GATE_KEEPER_PORT     HTTP/HTTPS port (default: 9000)
   GATE_KEEPER_WS_PORT  WebSocket port (default: 9001)
+    GATE_KEEPER_MCP_PORT MCP port for AI agents (default: 9002)
   GATE_KEEPER_HTTPS    Enable HTTPS (default: true)
 
 Examples:
@@ -172,7 +178,7 @@ export const startGateKeeper = async () => {
 
         // Dynamic imports to avoid issues when just showing help
         let expressLog, getConfigurationData, loadPlugins, configFileExists, executeAllScripts, GATE_KEEPER_STATE;
-        let express_server, express_port, express_ws_port, isHTTPS, startWebSocket, broadcast;
+        let express_server, express_port, express_ws_port, isHTTPS, startWebSocket, broadcast, startMcpServer, mcp_port;
 
         try {
             log('📦 Loading dependencies...');
@@ -200,6 +206,10 @@ export const startGateKeeper = async () => {
             const wsModule = await import('./server_ws.mjs');
             startWebSocket = wsModule.startWebSocket;
             broadcast = wsModule.broadcast;
+
+            const mcpModule = await import('./mcp_server.mjs');
+            startMcpServer = mcpModule.startMcpServer;
+            mcp_port = mcpModule.mcp_port;
         } catch (importError) {
             log(`❌ Error loading dependencies: ${importError.message}`);
             if (importError.stack) {
@@ -239,6 +249,10 @@ export const startGateKeeper = async () => {
             });
         });
 
+        log(`🤖 Starting MCP server on port ${mcp_port}...`);
+        await startMcpServer();
+        log(`✅ MCP server started at http://127.0.0.1:${mcp_port}/mcp`);
+
         // Load configuration data and plugins
         log('⚙️  Loading configuration and plugins...');
         const GATE_KEEPER_CONFIG_MODEL = getConfigurationData();
@@ -254,9 +268,10 @@ export const startGateKeeper = async () => {
 
         // Execute all configured scripts to check code quality
         log('🔍 Executing initial code quality checks...');
+        GATE_KEEPER_STATE.setWorking(true);
         try {
             const results = await executeAllScripts(GATE_KEEPER_PLUGINS);
-            GATE_KEEPER_STATE.isWorking().setResults(results);
+            GATE_KEEPER_STATE.setResults(results);
             const updatedState = await GATE_KEEPER_STATE.updateCanCommit();
             const canCommit = updatedState.canCommit;
 
@@ -270,10 +285,7 @@ export const startGateKeeper = async () => {
             // Broadcast the updated status to all connected clients
             const statusUpdate = {
                 type: TYPES_MESSAGES.STATUS_UPDATE,
-                data: {
-                    canCommit: canCommit,
-                    scripts: results
-                },
+                data: GATE_KEEPER_STATE.getStatus(),
                 success: true
             };
             broadcast(statusUpdate);
@@ -284,6 +296,8 @@ export const startGateKeeper = async () => {
                 kind: 'SCRIPTS',
                 severity: 'ERROR'
             });
+        } finally {
+            GATE_KEEPER_STATE.setWorking(false);
         }
 
         // Start the WebSocket server for real-time communication

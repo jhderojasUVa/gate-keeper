@@ -36,7 +36,13 @@ vi.mock('../../src/libs/execute_scripts.mjs', () => ({
 
 vi.mock('../../src/libs/state.mjs', () => ({
     STATE: {
-        isWorking: vi.fn(),
+        setWorking: vi.fn(),
+        setResults: vi.fn(),
+        getStatus: vi.fn(() => ({
+            canCommit: true,
+            inProgress: false,
+            scripts: []
+        })),
         updateCanCommit: vi.fn(),
         canCommit: true,
         scripts: []
@@ -57,6 +63,11 @@ vi.mock('../../src/server/server_conf.mjs', () => ({
 vi.mock('../../src/server/server_ws.mjs', () => ({
     startWebSocket: vi.fn(),
     broadcast: vi.fn()
+}));
+
+vi.mock('../../src/server/mcp_server.mjs', () => ({
+    startMcpServer: vi.fn().mockResolvedValue({ close: vi.fn() }),
+    mcp_port: 9002
 }));
 
 // Mock the terminal client
@@ -81,6 +92,7 @@ describe('Server Index', () => {
     let STATE;
     let startWebSocket;
     let broadcast;
+    let startMcpServer;
 
     beforeEach(async () => {
         vi.clearAllMocks();
@@ -97,6 +109,7 @@ describe('Server Index', () => {
         const executeScripts = await import('../../src/libs/execute_scripts.mjs');
         const state = await import('../../src/libs/state.mjs');
         const serverWs = await import('../../src/server/server_ws.mjs');
+        const mcpServer = await import('../../src/server/mcp_server.mjs');
         
         // Get mocked functions
         expressLog = vi.mocked(log.expressLog);
@@ -107,18 +120,21 @@ describe('Server Index', () => {
         STATE = state.STATE;
         startWebSocket = vi.mocked(serverWs.startWebSocket);
         broadcast = vi.mocked(serverWs.broadcast);
+        startMcpServer = vi.mocked(mcpServer.startMcpServer);
         
         // Setup default mocks
         configFileExists.mockReturnValue(true);
         getConfigurationData.mockReturnValue({ scripts: [] });
         loadPlugins.mockReturnValue([]);
         executeAllScripts.mockResolvedValue([]);
-        STATE.isWorking.mockReturnValue({
-            setResults: vi.fn().mockReturnValue({
-                updateCanCommit: vi.fn().mockReturnValue({ canCommit: true })
-            })
-        });
+        STATE.setWorking.mockReturnValue(STATE);
+        STATE.setResults.mockReturnValue(STATE);
         STATE.updateCanCommit.mockResolvedValue({ canCommit: true });
+        STATE.getStatus.mockReturnValue({
+            canCommit: true,
+            inProgress: false,
+            scripts: []
+        });
     });
 
     it('should start the server successfully', async () => {
@@ -129,12 +145,18 @@ describe('Server Index', () => {
             kind: 'HTTPS SERVER',
             severity: 'INFO'
         });
+        expect(startMcpServer).toHaveBeenCalled();
         expect(startWebSocket).toHaveBeenCalledWith(9001);
     });
 
     it('should execute scripts and broadcast results', async () => {
         const mockResults = [{ name: 'test', result: 'passed' }];
         executeAllScripts.mockResolvedValue(mockResults);
+        STATE.getStatus.mockReturnValue({
+            canCommit: true,
+            inProgress: false,
+            scripts: mockResults
+        });
 
         await startGateKeeper();
 
@@ -143,6 +165,7 @@ describe('Server Index', () => {
             type: 'STATUS_UPDATE',
             data: {
                 canCommit: true,
+                inProgress: false,
                 scripts: mockResults
             },
             success: true

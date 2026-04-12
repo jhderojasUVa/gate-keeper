@@ -86,6 +86,22 @@ class State {
         return this;
     }
 
+    // Explicit working state setter for long-running flows
+    setWorking(isWorking) {
+        this.inProgress = isWorking;
+
+        return this;
+    }
+
+    // Snapshot of the current status for HTTP, WebSocket and MCP consumers
+    getStatus() {
+        return {
+            canCommit: this.canCommit,
+            inProgress: this.inProgress,
+            scripts: this.scripts
+        };
+    }
+
     // Working in progress
     isWorking() {
         this.inProgress = !this.inProgress;
