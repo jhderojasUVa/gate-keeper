@@ -1,20 +1,23 @@
 name: Publish Package to GitHub Packages
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
+
+concurrency:
+  group: publish-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   publish:
     name: Publish Package
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,9 +25,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@jhderojasUVa'
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@jhderojasUVa"
+          always-auth: true
 
       - name: Install dependencies
         run: npm ci
@@ -35,7 +39,47 @@ jobs:
       - name: Run tests
         run: npm run test
 
+      - name: Read package metadata
+        id: pkg
+        shell: bash
+        run: |
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check if package version already exists
+        id: package_check
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          PACKAGE="${{ steps.pkg.outputs.name }}"
+          VERSION="${{ steps.pkg.outputs.version }}"
+
+          set +e
+          OUTPUT=$(npm view "${PACKAGE}@${VERSION}" version --registry=https://npm.pkg.github.com 2>&1)
+          STATUS=$?
+          set -e
+
+          if [ "$STATUS" -eq 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Package version already exists: ${PACKAGE}@${VERSION}"
+            exit 0
+          fi
+
+          if echo "$OUTPUT" | grep -Eq "E404|404 Not Found|not found"; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Package version not found: ${PACKAGE}@${VERSION}"
+            exit 0
+          fi
+
+          echo "$OUTPUT"
+          echo "Unexpected error while checking package version."
+          exit 1
+
       - name: Publish to GitHub Packages
-        run: npm publish
+        if: steps.package_check.outputs.exists == 'false'
+        run: npm publish --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
