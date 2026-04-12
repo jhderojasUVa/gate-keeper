@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -51,11 +53,10 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE: ${{ steps.pkg.outputs.name }}
+          VERSION: ${{ steps.pkg.outputs.version }}
         run: |
           set -euo pipefail
-
-          PACKAGE="${{ steps.pkg.outputs.name }}"
-          VERSION="${{ steps.pkg.outputs.version }}"
 
           set +e
           OUTPUT=$(npm view "${PACKAGE}@${VERSION}" version --registry=https://npm.pkg.github.com 2>&1)
@@ -78,8 +79,30 @@ jobs:
           echo "Unexpected error while checking package version."
           exit 1
 
-      - name: Publish to GitHub Packages
+      - name: Check for releasable conventional commits
         if: steps.package_check.outputs.exists == 'false'
+        id: conventional_commits
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log HEAD --pretty=format:"%s")
+          else
+            COMMITS=$(git log "${LAST_TAG}..HEAD" --pretty=format:"%s")
+          fi
+
+          if echo "$COMMITS" | grep -Eq '^(feat|fix)(\([^)]*\))?!?:'; then
+            echo "has_releasable_commits=true" >> "$GITHUB_OUTPUT"
+            echo "Releasable conventional commits found."
+          else
+            echo "has_releasable_commits=false" >> "$GITHUB_OUTPUT"
+            echo "No releasable conventional commits found."
+          fi
+
+      - name: Publish to GitHub Packages
+        if: steps.package_check.outputs.exists == 'false' && steps.conventional_commits.outputs.has_releasable_commits == 'true'
         run: npm publish --registry=https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
