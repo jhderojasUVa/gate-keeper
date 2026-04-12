@@ -23,7 +23,7 @@ describe('Public JS main', () => {
     });
 
     it('getWsPort returns data.port on success', async () => {
-        const { getWsPort } = await import('../../public/js/main.js');
+        const { getWsPort } = await import('../../public/js/main.mjs');
         global.fetch.mockResolvedValue({ json: async () => ({ port: 1234 }) });
 
         const port = await getWsPort();
@@ -32,7 +32,7 @@ describe('Public JS main', () => {
     });
 
     it('getWsPort returns fallback on fetch failure', async () => {
-        const { getWsPort } = await import('../../public/js/main.js');
+        const { getWsPort } = await import('../../public/js/main.mjs');
         global.fetch.mockRejectedValue(new Error('no net'));
 
         const port = await getWsPort();
@@ -40,14 +40,14 @@ describe('Public JS main', () => {
     });
 
     it('formatTime returns a string with time components', async () => {
-        const { formatTime } = await import('../../public/js/main.js');
+        const { formatTime } = await import('../../public/js/main.mjs');
         const time = formatTime();
         expect(typeof time).toBe('string');
         expect(time).toMatch(/\d{2}:\d{2}:\d{2}\.\d{3}/);
     });
 
     it('createLogElement builds correct error markup and structure', async () => {
-        const { createLogElement } = await import('../../public/js/main.js');
+        const { createLogElement } = await import('../../public/js/main.mjs');
 
         const logEl = createLogElement({success: false, type: 'ERROR', data: 'boom'});
         expect(logEl.className).toContain('log-entry');
@@ -56,7 +56,7 @@ describe('Public JS main', () => {
     });
 
     it('updateCommitStatus toggles commit status class and text when override set', async () => {
-        const { updateCommitStatus } = await import('../../public/js/main.js');
+        const { updateCommitStatus } = await import('../../public/js/main.mjs');
         const commitStatusDiv = document.getElementById('commit-status');
         await updateCommitStatus(commitStatusDiv, true);
 
@@ -65,7 +65,7 @@ describe('Public JS main', () => {
     });
 
     it('updateCommitStatus handles server error gracefully', async () => {
-        const { updateCommitStatus } = await import('../../public/js/main.js');
+        const { updateCommitStatus } = await import('../../public/js/main.mjs');
         const commitStatusDiv = document.getElementById('commit-status');
 
         global.fetch.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
@@ -77,7 +77,7 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs establishes WebSocket connection and handles onopen', async () => {
-        const { connectToWs } = await import('../../public/js/main.js');
+        const { connectToWs } = await import('../../public/js/main.mjs');
         const mockWs = {
             onopen: null,
             onmessage: null,
@@ -99,7 +99,7 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs handles WebSocket messages', async () => {
-        const { connectToWs } = await import('../../public/js/main.js');
+        const { connectToWs } = await import('../../public/js/main.mjs');
         const mockWs = {
             onopen: null,
             onmessage: null,
@@ -123,7 +123,7 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs handles invalid JSON messages', async () => {
-        const { connectToWs } = await import('../../public/js/main.js');
+        const { connectToWs } = await import('../../public/js/main.mjs');
         const mockWs = {
             onopen: null,
             onmessage: null,
@@ -144,7 +144,7 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs handles WebSocket error', async () => {
-        const { connectToWs } = await import('../../public/js/main.js');
+        const { connectToWs } = await import('../../public/js/main.mjs');
         const mockWs = {
             onopen: null,
             onmessage: null,

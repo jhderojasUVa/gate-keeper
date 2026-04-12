@@ -1,5 +1,5 @@
 // State of the app - Singleton
-import { canCommit } from "./scripts_check.mjs";
+import { canCommit } from './scripts_check.mjs';
 
 class State {
     // Initial State
@@ -47,7 +47,7 @@ class State {
         this.scripts.forEach((script, index) => {
             // remove
             if (script.name === name) {
-                this.scripts.splice(index, 1)
+                this.scripts.splice(index, 1);
             }
         });
 
@@ -71,7 +71,7 @@ class State {
                 this.scripts[index] = {
                     ...this.scripts[index],
                     result: undefined
-                }
+                };
             }
         });
 

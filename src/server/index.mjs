@@ -154,6 +154,7 @@ export const showVersion = () => {
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         log(`Gate Keeper v${packageJson.version}`);
     } catch (error) {
+        console.error('Failed to read package.json:', error);
         log('Gate Keeper (version unknown)');
     }
 };
@@ -385,6 +386,7 @@ if (isMainModule) {
                 const { startTerminalClient } = await import('../terminal/client-terminal.mjs');
                 await startTerminalClient();
             } catch (error) {
+                console.error('Failed to start terminal client:', error);
                 exitWithCode(1);
             }
         })();

@@ -1,4 +1,5 @@
 ---
+name: Tester
 description: AI Agent identity and instructions for testing tasks
 ---
 

@@ -46,7 +46,7 @@ describe('Execute Scripts', () => {
 
         try {
             await executeScriptsModule.executeAllScripts('invalid config');
-        } catch (e) {
+        } catch {
             // Expected to potentially error or exit
         }
 

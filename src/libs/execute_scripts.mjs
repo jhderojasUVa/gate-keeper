@@ -1,8 +1,6 @@
 import { exec } from 'child_process';
 import util from 'util';
 import { expressLog } from './log.mjs';
-// STATE
-import { STATE as GATE_KEEPER_STATE } from './state.mjs';
 
 // Promisify the exec
 const execute = util.promisify(exec);
@@ -28,7 +26,7 @@ export const executeAllScripts = (scripts, callback) => {
 
     // Create the array of promises
     let scriptArrayOfPromises = scripts.map(async(script) => {
-        return executeScript(script, callback)
+        return executeScript(script, callback);
     });
 
     // Return the array of promises

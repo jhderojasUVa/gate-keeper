@@ -25,5 +25,5 @@ export const loadPlugins = (configFile) => {
         };
     }
 
-    return scripts
+    return scripts;
 };

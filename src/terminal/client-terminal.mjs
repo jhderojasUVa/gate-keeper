@@ -3,7 +3,7 @@
 // Gate Keeper Terminal Client
 // Provides a terminal-based interface to monitor Gate Keeper status and logs
 
-import blessed from 'blessed';
+import * as blessed from 'blessed';
 import { WebSocket } from 'ws';
 import { colors } from '../libs/colors.mjs';
 
@@ -40,6 +40,7 @@ const getWsPort = async (serverUrl) => {
         const data = await response.json();
         return data.port;
     } catch (error) {
+        console.error('Failed to get ws port:', error);
         return 9001; // Default fallback
     }
 };
@@ -55,6 +56,7 @@ const checkCommitStatus = async (serverUrl) => {
         const data = await response.json();
         return data.cancommit;
     } catch (error) {
+        console.error('Failed to check commit permission:', error);
         return false;
     }
 };
@@ -66,7 +68,6 @@ const checkCommitStatus = async (serverUrl) => {
 const updateCommitStatus = (canCommit) => {
     if (!statusBox) return;
 
-    const status = canCommit ? 'success' : 'error';
     const title = canCommit ? 'Ready to Commit' : 'Commit Blocked';
     const desc = canCommit
         ? 'All checks passed. You can commit safely.'
@@ -164,6 +165,7 @@ const connectWebSocket = (wsUrl) => {
     try {
         wsConnection = new WebSocket(wsUrl);
     } catch (error) {
+        console.error('Failed to create WebSocket connection:', error);
         updateWsStatus('disconnected');
         setTimeout(() => connectWebSocket(wsUrl), 5000);
         return;
@@ -195,6 +197,7 @@ const connectWebSocket = (wsUrl) => {
                 addLogEntry(message);
             }
         } catch (error) {
+            console.error('Error processing WebSocket message:', error);
             addLogEntry({
                 success: false,
                 type: 'PARSE_ERROR',

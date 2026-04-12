@@ -1,6 +1,6 @@
 // Logging library
 import fs from 'fs';
-import { colors } from "./colors.mjs";
+import { colors } from './colors.mjs';
 
 // Check if you want to log on disk
 const logOnDisk = process.env.GATE_KEEPER_LOG_ON_DISK || false;
@@ -36,4 +36,4 @@ export const expressLog = ({
         const logFile = process.env.GATE_KEEPER_LOG_FILE || 'gate-keeper.log';
         fs.appendFileSync(logFile, `[${new Date().toISOString()}] [${severity}] [${kind}] ${message}\n`);
     }
-}
+};

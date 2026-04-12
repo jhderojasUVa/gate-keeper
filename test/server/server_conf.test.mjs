@@ -1,10 +1,5 @@
 import request from 'supertest';
 import { express_app, express_port, express_ws_port, isHTTPS } from '../../src/server/server_conf.mjs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 describe('Server Configuration', () => {
     it('should configure express_port and express_ws_port', () => {
@@ -43,7 +38,7 @@ describe('Server Configuration', () => {
     });
 
     it('should serve JavaScript files', async () => {
-        const response = await request(express_app).get('/js/main.js');
+        const response = await request(express_app).get('/js/main.mjs');
         expect(response.status).toBe(200);
         expect(response.type).toBe('application/javascript');
     });
