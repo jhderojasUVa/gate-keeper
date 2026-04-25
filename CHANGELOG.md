@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/jhderojasUVa/gate-keeper/compare/v1.1.0...v1.2.0) (2026-04-25)
+
+
+### Features
+
+* added claude agents ([0d18d30](https://github.com/jhderojasUVa/gate-keeper/commit/0d18d30d3513e1b1ad507fd4c4285f2eb4352cf0))
+* mcp server ([f96c96d](https://github.com/jhderojasUVa/gate-keeper/commit/f96c96d465822ba970ec882ba73d84883a339d13))
+* publish if needed ([#16](https://github.com/jhderojasUVa/gate-keeper/issues/16)) ([3b0833c](https://github.com/jhderojasUVa/gate-keeper/commit/3b0833c2c40b8539a701bcc0df1eaa477a6cc934))
+
+
+### Bug Fixes
+
+* agents ([a5c15b8](https://github.com/jhderojasUVa/gate-keeper/commit/a5c15b8f8d992cd94dc44e319ddd9a09206bf5d0))
+* bot credentials ([5ce0da8](https://github.com/jhderojasUVa/gate-keeper/commit/5ce0da82cbb94b648af9b9b72d237e6fd197d0f8))
+* lint ([f64495a](https://github.com/jhderojasUVa/gate-keeper/commit/f64495af3546d62876909035224cd91dadb9e22e))
+* major update ([b92cc2e](https://github.com/jhderojasUVa/gate-keeper/commit/b92cc2e354e6758c7c468cbcf633ebee4eb7283d))
+* tests ([4256177](https://github.com/jhderojasUVa/gate-keeper/commit/4256177168ee1c1b22dca47d26111c841a947f97))
+* tests ([a20d5f8](https://github.com/jhderojasUVa/gate-keeper/commit/a20d5f8fed8e366601896c75ad84807f9f619407))
+
 ## 1.1.0 (2026-04-02)
 
 
