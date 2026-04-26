@@ -1,9 +1,12 @@
 import http from 'http';
+import type { AddressInfo } from 'net';
 import request from 'supertest';
+import type { Response } from 'express';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { STATE } from '../../src/libs/state.ts';
+import { STATE } from '../../src/libs/state.js';
+import type { ScriptModel } from '../../src/models/configuration.model.js';
 import {
     createMcpApp,
     getGateKeeperStatus,
@@ -11,10 +14,43 @@ import {
     mcp_path,
     mcp_port,
     startMcpServer,
-} from '../../src/server/mcp_server.ts';
+} from '../../src/server/mcp_server.js';
 
-const MCP_SERVER_MODULE_PATH = '../../src/server/mcp_server.ts';
-const STATE_MODULE_PATH = '../../src/libs/state.ts';
+const MCP_SERVER_MODULE_PATH = '../../src/server/mcp_server.js';
+const STATE_MODULE_PATH = '../../src/libs/state.js';
+
+interface MockModuleOptions {
+    MockMcpServer?: unknown;
+    MockStreamableHTTPServerTransport?: unknown;
+}
+
+interface MockToolRegistration {
+    name: string;
+    definition: {
+        title?: string;
+        description?: string;
+        outputSchema?: Record<string, unknown>;
+    };
+    handler: () => Promise<{
+        content: Array<{ type: string; text: string }>;
+        structuredContent: ReturnType<typeof getGateKeeperStatus>;
+    }>;
+}
+
+const createScriptResult = (name: string, result: ScriptModel['result']): ScriptModel => ({
+    name,
+    command: undefined,
+    data: undefined,
+    result,
+});
+
+const getPort = (address: string | AddressInfo | null): number => {
+    if (!address || typeof address === 'string') {
+        throw new Error('Expected a TCP address.');
+    }
+
+    return address.port;
+};
 
 const resetMcpServerModuleMocks = () => {
     vi.doUnmock('@modelcontextprotocol/sdk/server/mcp.js');
@@ -24,7 +60,7 @@ const resetMcpServerModuleMocks = () => {
 const importFreshMcpServerArtifacts = async ({
     MockMcpServer,
     MockStreamableHTTPServerTransport,
-} = {}) => {
+}: MockModuleOptions = {}) => {
     vi.resetModules();
     resetMcpServerModuleMocks();
 
@@ -56,15 +92,15 @@ const flushPromises = async () => {
 };
 
 describe('MCP Server', () => {
-    let server;
-    let transport;
-    let client;
-    let baseUrl;
+    let server: http.Server | undefined;
+    let transport: StreamableHTTPClientTransport | undefined;
+    let client: Client | undefined;
+    let baseUrl = '';
 
-    const closeWithTimeout = async (promiseFactory, timeoutMs = 3000) => {
+    const closeWithTimeout = async (promiseFactory: () => Promise<unknown>, timeoutMs = 3000): Promise<void> => {
         await Promise.race([
             promiseFactory(),
-            new Promise((resolve) => setTimeout(resolve, timeoutMs))
+            new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))
         ]);
     };
 
@@ -72,16 +108,17 @@ describe('MCP Server', () => {
         STATE.clearAll();
         STATE.canCommit = true;
         STATE.setWorking(false);
-        STATE.setResults([{ name: 'lint', result: 'passed' }]);
+        STATE.setResults([createScriptResult('lint', 'passed')]);
 
         const app = createMcpApp('127.0.0.1');
         server = http.createServer(app);
+        const currentServer = server;
 
-        await new Promise((resolve) => {
-            server.listen(0, '127.0.0.1', resolve);
+        await new Promise<void>((resolve) => {
+            currentServer.listen(0, '127.0.0.1', () => resolve());
         });
 
-        const { port } = server.address();
+        const port = getPort(currentServer.address());
         baseUrl = `http://127.0.0.1:${port}/mcp`;
         client = new Client({ name: 'gate-keeper-test-client', version: '1.0.0' });
         transport = new StreamableHTTPClientTransport(new URL(baseUrl));
@@ -90,21 +127,24 @@ describe('MCP Server', () => {
 
     afterEach(async () => {
         if (client) {
-            await closeWithTimeout(() => client.close());
+            const currentClient = client;
+            await closeWithTimeout(() => currentClient.close());
             client = undefined;
         }
 
         if (transport) {
-            await closeWithTimeout(() => transport.close());
+            const currentTransport = transport;
+            await closeWithTimeout(() => currentTransport.close());
             transport = undefined;
         }
 
         if (server) {
+            const currentServer = server;
             // Ensure keep-alive sockets do not outlive test teardown.
-            if (typeof server.closeAllConnections === 'function') {
-                server.closeAllConnections();
+            if (typeof currentServer.closeAllConnections === 'function') {
+                currentServer.closeAllConnections();
             }
-            await closeWithTimeout(() => new Promise((resolve) => server.close(resolve)));
+            await closeWithTimeout(() => new Promise((resolve) => currentServer.close(resolve)));
             server = undefined;
         }
 
@@ -126,7 +166,7 @@ describe('MCP Server', () => {
             canCommit: true,
             inProgress: false,
             summary: 'Gate Keeper finished running the configured scripts. Commit is allowed.',
-            scripts: [{ name: 'lint', result: 'passed' }],
+            scripts: [createScriptResult('lint', 'passed')],
         });
     });
 
@@ -138,11 +178,15 @@ describe('MCP Server', () => {
             canCommit: false,
             inProgress: false,
             summary: 'Gate Keeper finished running the configured scripts. Commit is blocked.',
-            scripts: [{ name: 'lint', result: 'passed' }],
+            scripts: [createScriptResult('lint', 'passed')],
         });
     });
 
     it('should expose the gate keeper status tool', async () => {
+        if (!client) {
+            throw new Error('Expected MCP client to be available.');
+        }
+
         const tools = await client.listTools();
 
         expect(tools.tools.map((tool) => tool.name)).toContain('get_gate_keeper_status');
@@ -151,6 +195,9 @@ describe('MCP Server', () => {
     it('should return commit and progress status through MCP', async () => {
         STATE.canCommit = false;
         STATE.setWorking(true);
+        if (!client) {
+            throw new Error('Expected MCP client to be available.');
+        }
 
         const result = await client.callTool({
             name: 'get_gate_keeper_status'
@@ -160,7 +207,7 @@ describe('MCP Server', () => {
             canCommit: false,
             inProgress: true,
             summary: 'Gate Keeper is still running the configured scripts.',
-            scripts: [{ name: 'lint', result: 'passed' }]
+            scripts: [createScriptResult('lint', 'passed')]
         });
     });
 
@@ -176,7 +223,7 @@ describe('MCP Server', () => {
             canCommit: false,
             inProgress: true,
             summary: 'Gate Keeper is still running the configured scripts.',
-            scripts: [{ name: 'lint', result: 'passed' }],
+            scripts: [createScriptResult('lint', 'passed')],
         });
     });
 
@@ -203,14 +250,20 @@ describe('MCP Server', () => {
     });
 
     it('should register the MCP tool and return structured content', async () => {
-        const registrations = [];
+        const registrations: MockToolRegistration[] = [];
 
         class MockMcpServer {
-            constructor(config) {
+            public config: { name: string; version: string };
+
+            constructor(config: { name: string; version: string }) {
                 this.config = config;
             }
 
-            registerTool(name, definition, handler) {
+            registerTool(
+                name: string,
+                definition: MockToolRegistration['definition'],
+                handler: MockToolRegistration['handler'],
+            ): void {
                 registrations.push({ name, definition, handler });
             }
         }
@@ -222,7 +275,7 @@ describe('MCP Server', () => {
         isolatedState.clearAll();
         isolatedState.canCommit = false;
         isolatedState.setWorking(false);
-        isolatedState.setResults([{ name: 'tests', result: 'failed' }]);
+        isolatedState.setResults([createScriptResult('tests', 'failed')]);
 
         const serverInstance = createGateKeeperMcpServer();
         const [{ name, definition, handler }] = registrations;
@@ -248,7 +301,7 @@ describe('MCP Server', () => {
             canCommit: false,
             inProgress: false,
             summary: 'Gate Keeper finished running the configured scripts. Commit is blocked.',
-            scripts: [{ name: 'tests', result: 'failed' }],
+            scripts: [createScriptResult('tests', 'failed')],
         });
         expect(result.content).toEqual([
             {
@@ -274,7 +327,7 @@ describe('MCP Server', () => {
 
         class MockStreamableHTTPServerTransport {
             close = closeTransport;
-            async handleRequest() {}
+            async handleRequest(): Promise<void> {}
         }
 
         const { createMcpApp: createMockedMcpApp } = await importFreshMcpServerArtifacts({
@@ -318,7 +371,7 @@ describe('MCP Server', () => {
 
         class MockStreamableHTTPServerTransport {
             close = closeTransport;
-            async handleRequest() {
+            async handleRequest(): Promise<void> {
                 throw requestError;
             }
         }
@@ -361,7 +414,7 @@ describe('MCP Server', () => {
 
         class MockStreamableHTTPServerTransport {
             close = vi.fn();
-            async handleRequest() {
+            async handleRequest(): Promise<void> {
                 throw 'plain failure';
             }
         }
@@ -395,7 +448,7 @@ describe('MCP Server', () => {
 
         class MockStreamableHTTPServerTransport {
             close = closeTransport;
-            async handleRequest(req, res) {
+            async handleRequest(_req: unknown, res: Response): Promise<void> {
                 res.status(200).json({ ok: true });
             }
         }
@@ -430,7 +483,7 @@ describe('MCP Server', () => {
 
         class MockStreamableHTTPServerTransport {
             close = closeTransport;
-            async handleRequest(req, res) {
+            async handleRequest(_req: unknown, res: Response): Promise<void> {
                 res.status(202).json({ accepted: true });
                 throw new Error('late failure');
             }
@@ -461,7 +514,7 @@ describe('MCP Server', () => {
         const standaloneServer = await startMcpServer(0, '127.0.0.1');
 
         try {
-            const { port } = standaloneServer.address();
+            const port = getPort(standaloneServer.address());
 
             expect(standaloneServer.listening).toBe(true);
             expect(consoleLog).toHaveBeenCalledWith(
@@ -478,8 +531,8 @@ describe('MCP Server', () => {
     it('should reject when the standalone MCP server cannot listen', async () => {
         const blocker = http.createServer();
 
-        await new Promise((resolve) => blocker.listen(0, '127.0.0.1', resolve));
-        const { port } = blocker.address();
+        await new Promise<void>((resolve) => blocker.listen(0, '127.0.0.1', () => resolve()));
+        const port = getPort(blocker.address());
 
         try {
             await expect(startMcpServer(port, '127.0.0.1')).rejects.toThrow();

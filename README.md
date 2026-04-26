@@ -64,11 +64,7 @@ npm test
 npm run lint
 ```
 
-`npm run test:unit` runs the full suite in two phases:
-1. Coverage run for the main test suite.
-2. Dedicated run for `test/server/mcp_server.test.mjs`.
-
-This keeps test execution stable while preserving full test coverage checks for the rest of the suite.
+`npm run test:unit` runs the full unit test suite with coverage, including the MCP server tests.
 
 # Config file
 
