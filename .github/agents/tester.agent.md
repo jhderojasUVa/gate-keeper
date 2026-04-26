@@ -2,6 +2,7 @@
 name: Tester
 description: AI Agent identity and instructions for testing tasks
 tools: [read, edit, execute, search, web, todo]
+model: GPT-5.3-Codex (copilot)
 user-invocable: true
 ---
 
@@ -20,4 +21,4 @@ Your primary responsibility is to ensure that the code is thoroughly tested, rel
 - Ensure tests are deterministic and do not contain flaky behavior.
 - Use explicit mocking for side effects and I/O.
 - Follow "Arrange, Act, Assert" pattern in all test implementations.
-- Write descriptive test descriptions so anyone can understand the expected behavior.
+- Write descriptive test descriptions and documentation on the test so anyone can understand the expected behavior.

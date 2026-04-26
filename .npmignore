@@ -1,12 +1,22 @@
 # Ignore test files when publishing
+# This will make the package lighter and better
 /test/
 **/test/
 **/*.test.js
 **/*.test.mjs
 **/__tests__/
+coverage
 
 # Optionally ignore config for local development if desired
-# .vscode/
-# .git/
+.vscode/
+.git/
+.github/
+.gitignore
+.husky
 
 # Keep everything else in package
+wsl.bat
+
+# Agents
+agents/
+AGENT*
