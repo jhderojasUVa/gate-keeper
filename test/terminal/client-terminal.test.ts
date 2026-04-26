@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 vi.mock('blessed', () => ({
     screen: vi.fn(),
@@ -27,21 +27,66 @@ import {
     updateCommitStatus,
     updateStatusMessage,
     updateWsStatus,
-} from '../../src/terminal/client-terminal.ts';
+} from '../../src/terminal/client-terminal.js';
 
-const createBox = () => ({
+type ConnectWebSocketOptions = NonNullable<Parameters<typeof connectWebSocket>[1]>;
+
+interface MockBox {
+    setContent: Mock;
+    insertTop: Mock;
+    setScrollPerc: Mock;
+    append: Mock;
+}
+
+interface MockScreen {
+    key: Mock;
+    append: Mock;
+    render: Mock;
+}
+
+interface MockClientSocket {
+    onopen: (() => void | Promise<void>) | null;
+    onmessage: ((event: { data: string }) => void) | null;
+    onclose: (() => void) | null;
+    onerror: ((event?: unknown) => void) | null;
+    close: Mock;
+}
+
+type GlobalAssignments = {
+    fetch: Mock;
+};
+
+interface BoxOptionsLike {
+    label?: string;
+    content?: string;
+    right?: number | string;
+}
+
+const mockedBlessedScreen = vi.mocked(blessed.screen);
+const mockedBlessedBox = vi.mocked(blessed.box);
+
+const createBox = (): MockBox => ({
     setContent: vi.fn(),
     insertTop: vi.fn(),
     setScrollPerc: vi.fn(),
     append: vi.fn(),
 });
 
+const requireHandler = <T>(handler: T | null, name: string): T => {
+    if (!handler) {
+        throw new Error(`Expected ${name} handler to be defined.`);
+    }
+
+    return handler;
+};
+
 describe('Terminal Client', () => {
-    let mockScreen;
-    let mockStatusBox;
-    let mockLogBox;
-    let mockWsStatusBox;
-    let mockStatusMessageBox;
+    let mockScreen: MockScreen;
+    let mockStatusBox: MockBox;
+    let mockLogBox: MockBox;
+    let mockWsStatusBox: MockBox;
+    let mockStatusMessageBox: MockBox;
+    let fetchMock: Mock;
 
     beforeEach(() => {
         vi.restoreAllMocks();
@@ -51,7 +96,8 @@ describe('Terminal Client', () => {
         delete process.env.GATE_KEEPER_PORT;
         delete process.env.GATE_KEEPER_HTTPS;
 
-        global.fetch = vi.fn();
+        fetchMock = vi.fn();
+        (globalThis as unknown as GlobalAssignments).fetch = fetchMock;
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
         mockScreen = {
@@ -65,33 +111,33 @@ describe('Terminal Client', () => {
         mockStatusMessageBox = createBox();
 
         setTerminalUiRefs({
-            screen: mockScreen,
-            statusBox: mockStatusBox,
-            logBox: mockLogBox,
-            wsStatusBox: mockWsStatusBox,
-            statusMessageBox: mockStatusMessageBox,
+            screen: mockScreen as unknown as blessed.Widgets.Screen,
+            statusBox: mockStatusBox as unknown as blessed.Widgets.BoxElement,
+            logBox: mockLogBox as unknown as blessed.Widgets.BoxElement,
+            wsStatusBox: mockWsStatusBox as unknown as blessed.Widgets.BoxElement,
+            statusMessageBox: mockStatusMessageBox as unknown as blessed.Widgets.BoxElement,
         });
 
-        blessed.screen.mockReturnValue(mockScreen);
-        blessed.box.mockImplementation((options = {}) => {
+        mockedBlessedScreen.mockReturnValue(mockScreen as never);
+        mockedBlessedBox.mockImplementation((options: BoxOptionsLike = {}) => {
             if (options.label === ' Commit Status ') {
-                return mockStatusBox;
+                return mockStatusBox as never;
             }
             if (options.label === ' System Feed ') {
-                return mockLogBox;
+                return mockLogBox as never;
             }
             if (Object.prototype.hasOwnProperty.call(options, 'right')) {
-                return mockWsStatusBox;
+                return mockWsStatusBox as never;
             }
             if (options.content?.includes('Gate Keeper')) {
-                return { append: vi.fn() };
+                return { append: vi.fn() } as never;
             }
-            return mockStatusMessageBox;
+            return mockStatusMessageBox as never;
         });
     });
 
     it('gets the WebSocket port and falls back on failure', async () => {
-        global.fetch
+        fetchMock
             .mockResolvedValueOnce({ json: async () => ({ port: 9100 }) })
             .mockRejectedValueOnce(new Error('offline'));
 
@@ -100,7 +146,7 @@ describe('Terminal Client', () => {
     });
 
     it('checks commit status and falls back to false on errors', async () => {
-        global.fetch
+        fetchMock
             .mockResolvedValueOnce({ json: async () => ({ cancommit: true }) })
             .mockRejectedValueOnce(new Error('offline'));
 
@@ -152,7 +198,7 @@ describe('Terminal Client', () => {
     it('setTerminalUiRefs preserves existing refs on partial updates while allowing explicit null', () => {
         const replacementStatusBox = createBox();
 
-        setTerminalUiRefs({ statusBox: replacementStatusBox });
+        setTerminalUiRefs({ statusBox: replacementStatusBox as unknown as blessed.Widgets.BoxElement });
         updateCommitStatus(true);
         addLogEntry({ type: 'INFO', data: 'still active' });
         updateWsStatus('connected');
@@ -173,7 +219,7 @@ describe('Terminal Client', () => {
 
     it('connectWebSocket reconnects after constructor failures and closes on errors', async () => {
         const scheduleReconnect = vi.fn((callback) => callback());
-        const goodSocket = {
+        const goodSocket: MockClientSocket = {
             onopen: null,
             onmessage: null,
             onclose: null,
@@ -187,21 +233,21 @@ describe('Terminal Client', () => {
             .mockImplementationOnce(() => goodSocket);
 
         connectWebSocket('ws://localhost:9001', {
-            createWebSocket,
+            createWebSocket: createWebSocket as unknown as ConnectWebSocketOptions['createWebSocket'],
             reconnectDelay: 10,
-            scheduleReconnect,
+            scheduleReconnect: scheduleReconnect as unknown as typeof setTimeout,
         });
 
         expect(createWebSocket).toHaveBeenCalledTimes(2);
         expect(mockWsStatusBox.setContent).toHaveBeenLastCalledWith(expect.stringContaining('Connecting...'));
 
-        goodSocket.onerror({ type: 'socket-error' });
+        requireHandler(goodSocket.onerror, 'onerror')({ type: 'socket-error' });
 
         expect(goodSocket.close).toHaveBeenCalled();
     });
 
     it('connectWebSocket handles open, status updates, generic messages, parse errors, and close reconnects', async () => {
-        const socket = {
+        const socket: MockClientSocket = {
             onopen: null,
             onmessage: null,
             onclose: null,
@@ -210,18 +256,18 @@ describe('Terminal Client', () => {
         };
         const scheduleReconnect = vi.fn();
 
-        global.fetch
+        fetchMock
             .mockResolvedValueOnce({ json: async () => ({ cancommit: true }) });
 
         connectWebSocket('ws://localhost:9001', {
-            createWebSocket: vi.fn(() => socket),
+            createWebSocket: vi.fn(() => socket) as unknown as ConnectWebSocketOptions['createWebSocket'],
             statusCheckUrl: 'http://localhost:9000',
-            scheduleReconnect,
+            scheduleReconnect: scheduleReconnect as unknown as typeof setTimeout,
             reconnectDelay: 25,
         });
 
-        await socket.onopen();
-        socket.onmessage({
+        await requireHandler(socket.onopen, 'onopen')();
+        requireHandler(socket.onmessage, 'onmessage')({
             data: JSON.stringify({
                 type: 'STATUS_UPDATE',
                 data: {
@@ -233,16 +279,16 @@ describe('Terminal Client', () => {
                 },
             }),
         });
-        socket.onmessage({
+        requireHandler(socket.onmessage, 'onmessage')({
             data: JSON.stringify({
                 type: 'INFO',
                 data: 'Heads up',
             }),
         });
-        socket.onmessage({ data: 'not json' });
-        socket.onclose();
+        requireHandler(socket.onmessage, 'onmessage')({ data: 'not json' });
+        requireHandler(socket.onclose, 'onclose')();
 
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:9000/cancommit');
+        expect(fetchMock).toHaveBeenCalledWith('http://localhost:9000/cancommit');
         expect(mockStatusBox.setContent).toHaveBeenCalledWith(expect.stringContaining('Commit Blocked'));
         expect(mockLogBox.insertTop).toHaveBeenCalledWith(expect.stringContaining('lint: ok'));
         expect(mockLogBox.insertTop).toHaveBeenCalledWith(expect.stringContaining('test: Failed'));
@@ -255,25 +301,25 @@ describe('Terminal Client', () => {
         delete process.env.VITEST;
         const headerBox = { append: vi.fn() };
 
-        blessed.box.mockImplementation((options = {}) => {
+        mockedBlessedBox.mockImplementation((options: BoxOptionsLike = {}) => {
             if (options.content?.includes('Gate Keeper')) {
-                return headerBox;
+                return headerBox as never;
             }
             if (options.label === ' Commit Status ') {
-                return mockStatusBox;
+                return mockStatusBox as never;
             }
             if (options.label === ' System Feed ') {
-                return mockLogBox;
+                return mockLogBox as never;
             }
             if (Object.prototype.hasOwnProperty.call(options, 'right')) {
-                return mockWsStatusBox;
+                return mockWsStatusBox as never;
             }
-            return mockStatusMessageBox;
+            return mockStatusMessageBox as never;
         });
 
         initUI();
 
-        expect(blessed.screen).toHaveBeenCalledWith(expect.objectContaining({
+        expect(mockedBlessedScreen).toHaveBeenCalledWith(expect.objectContaining({
             smartCSR: true,
             title: 'Gate Keeper Terminal Client',
         }));
@@ -284,7 +330,7 @@ describe('Terminal Client', () => {
     });
 
     it('starts the terminal client with custom port and http mode', async () => {
-        global.fetch.mockImplementation((url) => {
+        fetchMock.mockImplementation((url: string) => {
             if (url === 'http://localhost:8080/ws-port') {
                 return Promise.resolve({ json: async () => ({ port: 9555 }) });
             }
@@ -298,8 +344,8 @@ describe('Terminal Client', () => {
 
         await startTerminalClient({ port: 8080 });
 
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/ws-port');
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/cancommit');
+        expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/ws-port');
+        expect(fetchMock).toHaveBeenCalledWith('http://localhost:8080/cancommit');
         expect(mockStatusMessageBox.setContent).toHaveBeenCalledWith(
             '🔌 Connecting to WebSocket at ws://localhost:9555...'
         );

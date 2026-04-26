@@ -1,4 +1,4 @@
-import { TYPES_MESSAGES } from '../../src/models/wsServerRequest.model.ts';
+import { TYPES_MESSAGES } from '../../src/models/wsServerRequest.model.js';
 
 describe('WS Server Request Model', () => {
     it('should have expected message types', () => {

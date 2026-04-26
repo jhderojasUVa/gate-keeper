@@ -1,4 +1,4 @@
-import { WS_RESPONSE_OK, WS_RESPONSE_KO } from '../../src/models/wsResponse.model.ts';
+import { WS_RESPONSE_OK, WS_RESPONSE_KO } from '../../src/models/wsResponse.model.js';
 
 describe('WS Response Model', () => {
     it('should define WS_RESPONSE_OK correctly', () => {

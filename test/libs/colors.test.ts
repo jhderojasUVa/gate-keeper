@@ -1,4 +1,4 @@
-import { colors, textStiles } from '../../src/libs/colors.ts';
+import { colors, textStiles } from '../../src/libs/colors.js';
 
 describe('Colors', () => {
     it('should export colors object', () => {

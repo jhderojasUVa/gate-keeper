@@ -41,25 +41,25 @@ vi.mock('child_process', () => ({
     exec: mocks.exec
 }));
 
-vi.mock('../../src/libs/log.ts', () => ({
+vi.mock('../../src/libs/log.js', () => ({
     expressLog: mocks.expressLog
 }));
 
-vi.mock('../../src/libs/load_config.ts', () => ({
+vi.mock('../../src/libs/load_config.js', () => ({
     getConfigurationData: mocks.getConfigurationData,
     loadPlugins: mocks.loadPlugins,
     configFileExists: mocks.configFileExists
 }));
 
-vi.mock('../../src/libs/execute_scripts.ts', () => ({
+vi.mock('../../src/libs/execute_scripts.js', () => ({
     executeAllScripts: mocks.executeAllScripts
 }));
 
-vi.mock('../../src/libs/state.ts', () => ({
+vi.mock('../../src/libs/state.js', () => ({
     STATE: mocks.STATE
 }));
 
-vi.mock('../../src/server/server_conf.ts', () => ({
+vi.mock('../../src/server/server_conf.js', () => ({
     express_app: {},
     express_server: {
         listen: mocks.expressServerListen,
@@ -70,17 +70,17 @@ vi.mock('../../src/server/server_conf.ts', () => ({
     isHTTPS: true
 }));
 
-vi.mock('../../src/server/server_ws.ts', () => ({
+vi.mock('../../src/server/server_ws.js', () => ({
     startWebSocket: mocks.startWebSocket,
     broadcast: mocks.broadcast
 }));
 
-vi.mock('../../src/server/mcp_server.ts', () => ({
+vi.mock('../../src/server/mcp_server.js', () => ({
     startMcpServer: mocks.startMcpServer,
     mcp_port: 9002
 }));
 
-vi.mock('../../src/terminal/client-terminal.ts', () => ({
+vi.mock('../../src/terminal/client-terminal.js', () => ({
     startTerminalClient: mocks.startTerminalClient
 }));
 
@@ -98,14 +98,14 @@ const setProcess = ({ argv = ['node', 'vitest'], platform = 'linux', env = {} } 
 };
 
 const loadServerIndex = async () => {
-    return import('../../src/server/index.ts');
+    return import('../../src/server/index.js');
 };
 
 describe('Server Index', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.resetModules();
-        vi.doMock('../../src/server/server_conf.ts', () => ({
+        vi.doMock('../../src/server/server_conf.js', () => ({
             express_app: {},
             express_server: {
                 listen: mocks.expressServerListen,
@@ -262,7 +262,7 @@ describe('Server Index', () => {
     });
 
     it('should handle dependency loading failures', async () => {
-        vi.doMock('../../src/server/server_conf.ts', () => {
+        vi.doMock('../../src/server/server_conf.js', () => {
             const brokenModule = {
                 express_app: {},
                 express_ws_port: 9001,
@@ -554,7 +554,7 @@ describe('Server Index', () => {
     });
 
     it('should use HTTP URLs when HTTPS is disabled for server startup and browser opening', async () => {
-        vi.doMock('../../src/server/server_conf.ts', () => ({
+        vi.doMock('../../src/server/server_conf.js', () => ({
             express_app: {},
             express_server: {
                 listen: mocks.expressServerListen,

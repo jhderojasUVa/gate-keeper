@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+type LaunchCli = (options: {
+    commandName: string;
+    targetRelativePath: string;
+}) => never;
+
 const existsSyncMock = vi.hoisted(() => vi.fn());
 const spawnSyncMock = vi.hoisted(() => vi.fn());
 
@@ -12,11 +17,12 @@ vi.mock('node:child_process', () => ({
 }));
 
 describe('launchCli', () => {
-    let launchCli;
+    let launchCli: LaunchCli;
 
     beforeEach(async () => {
         vi.resetModules();
         vi.clearAllMocks();
+        // @ts-expect-error Untyped JS bin entrypoint under test.
         ({ launchCli } = await import('../../bin/launch-cli.js'));
     });
 
@@ -26,9 +32,9 @@ describe('launchCli', () => {
         existsSyncMock.mockReturnValue(false);
 
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
             throw new Error(`process.exit:${code}`);
-        });
+        }) as typeof process.exit);
 
         expect(() => launchCli({
             commandName: 'gate-keeper',
@@ -51,9 +57,9 @@ describe('launchCli', () => {
         existsSyncMock.mockReturnValue(true);
         spawnSyncMock.mockReturnValue({ status: 0 });
 
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
             throw new Error(`process.exit:${code}`);
-        });
+        }) as typeof process.exit);
 
         expect(() => launchCli({
             commandName: 'gate-keeper',

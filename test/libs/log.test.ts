@@ -9,7 +9,12 @@ const colorsMock = {
     reset: '<reset>',
 };
 
-const loadLogModule = async ({ logOnDisk = false, logFile } = {}) => {
+interface LoadLogModuleOptions {
+    logOnDisk?: boolean;
+    logFile?: string;
+}
+
+const loadLogModule = async ({ logOnDisk = false, logFile }: LoadLogModuleOptions = {}) => {
     vi.resetModules();
 
     if (logOnDisk) {
@@ -34,7 +39,7 @@ const loadLogModule = async ({ logOnDisk = false, logFile } = {}) => {
         colors: colorsMock,
     }));
 
-    const { expressLog } = await import('../../src/libs/log.ts');
+    const { expressLog } = await import('../../src/libs/log.js');
     return { expressLog, appendFileSync };
 };
 

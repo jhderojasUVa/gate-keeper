@@ -1,4 +1,4 @@
-import { __dirname, version, appReleasePreferences, betaStartupRibbonLines } from '../../src/libs/app_utils.ts';
+import { __dirname, version, appReleasePreferences, betaStartupRibbonLines } from '../../src/libs/app_utils.js';
 import path from 'path';
 
 describe('App Utils', () => {

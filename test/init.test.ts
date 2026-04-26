@@ -1,65 +1,76 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../src/libs/load_config.ts', () => ({
-    configFileExists: vi.fn()
+const configFileExistsMock = vi.hoisted(() => vi.fn());
+const readFileSyncMock = vi.hoisted(() => vi.fn());
+const copyFileSyncMock = vi.hoisted(() => vi.fn());
+const writeSyncMock = vi.hoisted(() => vi.fn());
+const execMock = vi.hoisted(() => vi.fn());
+
+vi.mock('../src/libs/load_config.js', () => ({
+    configFileExists: configFileExistsMock,
 }));
 
-vi.mock('fs', async (importOriginal) => {
-    const actual = await importOriginal();
+vi.mock('fs', () => {
     const mocked = {
-        readFileSync: vi.fn(),
-        copyFileSync: vi.fn(),
-        writeSync: vi.fn()
+        readFileSync: readFileSyncMock,
+        copyFileSync: copyFileSyncMock,
+        writeSync: writeSyncMock,
     };
+
     return {
-        ...actual,
         __esModule: true,
         default: mocked,
-        ...mocked
+        ...mocked,
     };
 });
 
-vi.mock('../src/libs/app_utils.ts', () => ({
-    __dirname: '/tmp'
+vi.mock('child_process', () => ({
+    exec: execMock,
 }));
 
+vi.mock('../src/libs/app_utils.js', () => ({
+    __dirname: '/tmp',
+}));
+
+type InitModule = typeof import('../src/init.js');
+
+const mockProcessExit = () => vi.spyOn(process, 'exit').mockImplementation((() => undefined as never) as typeof process.exit);
+
 describe('gate-keeper-init', () => {
-    let initGateKepper;
-    let loadConfig;
-    let fs;
+    let initModule: InitModule;
 
     beforeEach(async () => {
+        vi.resetModules();
         vi.clearAllMocks();
-        const module = await import('../src/init.ts');
-        initGateKepper = module.initGateKepper;
-        loadConfig = await import('../src/libs/load_config.ts');
-        fs = await import('fs');
+        initModule = await import('../src/init.js');
     });
 
     it('creates configuration if missing', () => {
-        loadConfig.configFileExists.mockReturnValue(false);
+        configFileExistsMock.mockReturnValue(false);
 
-        const result = initGateKepper();
+        const result = initModule.initGateKepper();
         expect(result).toBe(true);
-        expect(fs.default.copyFileSync).toHaveBeenCalled();
+        expect(copyFileSyncMock).toHaveBeenCalled();
     });
 
     it('does not create configuration if exists', () => {
-        loadConfig.configFileExists.mockReturnValue(true);
+        configFileExistsMock.mockReturnValue(true);
 
-        const result = initGateKepper();
+        const result = initModule.initGateKepper();
         expect(result).toBe(false);
     });
 
     it('process.exit is invoked when copy fails', () => {
-        loadConfig.configFileExists.mockReturnValue(false);
-        fs.default.copyFileSync.mockImplementation(() => { throw new Error('copy fail'); });
+        configFileExistsMock.mockReturnValue(false);
+        copyFileSyncMock.mockImplementation(() => {
+            throw new Error('copy fail');
+        });
 
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
 
-        initGateKepper();
+        initModule.initGateKepper();
 
         expect(exitSpy).toHaveBeenCalledWith(1);
         exitSpy.mockRestore();
@@ -68,7 +79,7 @@ describe('gate-keeper-init', () => {
     it('showHelp can be called without throwing', async () => {
         const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-        const { showHelp } = await import('../src/init.ts');
+        const { showHelp } = await import('../src/init.js');
         showHelp();
 
         expect(consoleLogSpy).toHaveBeenCalled();
@@ -78,16 +89,16 @@ describe('gate-keeper-init', () => {
 
     it('showVersion prints version when package.json exists', async () => {
         const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        fs.default.readFileSync.mockReturnValue(JSON.stringify({ version: '9.0.0' }));
+        readFileSyncMock.mockReturnValue(JSON.stringify({ version: '9.0.0' }));
         const expectedPackageJsonPath = path.resolve(
-            path.dirname(fileURLToPath(new URL('../src/init.ts', import.meta.url))),
+            path.dirname(fileURLToPath(new URL('../src/init.js', import.meta.url))),
             '../package.json',
         );
 
-        const { showVersion } = await import('../src/init.ts');
+        const { showVersion } = await import('../src/init.js');
         showVersion();
 
-        expect(fs.default.readFileSync).toHaveBeenCalledWith(
+        expect(readFileSyncMock).toHaveBeenCalledWith(
             expectedPackageJsonPath,
             'utf8',
         );
@@ -98,22 +109,18 @@ describe('gate-keeper-init', () => {
 });
 
 describe('gate-keeper-init CLI mode', () => {
-    let loadConfig;
-
-    beforeEach(async () => {
+    beforeEach(() => {
         vi.resetModules();
         vi.clearAllMocks();
-        const loadConfigModule = await import('../src/libs/load_config.ts');
-        loadConfig = loadConfigModule;
     });
 
     it('shows help and exits with code 0 when --help is passed', async () => {
         const originalArgv = process.argv;
         process.argv = ['node', 'gate-keeper-init', '--help'];
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-        await import('../src/init.ts');
+        await import('../src/init.js');
 
         expect(exitSpy).toHaveBeenCalledWith(0);
 
@@ -125,10 +132,10 @@ describe('gate-keeper-init CLI mode', () => {
     it('shows version and exits with code 0 when --version is passed', async () => {
         const originalArgv = process.argv;
         process.argv = ['node', 'gate-keeper-init', '--version'];
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-        await import('../src/init.ts');
+        await import('../src/init.js');
 
         expect(exitSpy).toHaveBeenCalledWith(0);
 
@@ -140,9 +147,9 @@ describe('gate-keeper-init CLI mode', () => {
     it('calls initGateKepper in normal mode', async () => {
         const originalArgv = process.argv;
         process.argv = ['node', 'gate-keeper-init'];
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
 
-        const module = await import('../src/init.ts');
+        const module = await import('../src/init.js');
 
         expect(module.initGateKepper).toBeDefined();
 
@@ -153,10 +160,10 @@ describe('gate-keeper-init CLI mode', () => {
     it('handles invalid arguments', async () => {
         const originalArgv = process.argv;
         process.argv = ['node', 'gate-keeper-init', '--invalid'];
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-        await import('../src/init.ts');
+        await import('../src/init.js');
 
         expect(exitSpy).toHaveBeenCalledWith(1);
         expect(logSpy).toHaveBeenCalledWith('❌ Unknown argument(s): --invalid');
@@ -169,18 +176,13 @@ describe('gate-keeper-init CLI mode', () => {
     it('handles --open option', async () => {
         const originalArgv = process.argv;
         process.argv = ['node', 'gate-keeper-init', '--open'];
-        const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined);
+        const exitSpy = mockProcessExit();
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-        // Mock config
-        loadConfig.configFileExists.mockReturnValue(true);
+        configFileExistsMock.mockReturnValue(true);
+        execMock.mockImplementation((_command: string, callback?: (error: Error | null) => void) => callback?.(null));
 
-        // Mock exec
-        vi.mock('child_process', () => ({
-            exec: vi.fn((command, callback) => callback(null))
-        }));
-
-        await import('../src/init.ts');
+        await import('../src/init.js');
 
         expect(logSpy).toHaveBeenCalledWith('\n✨ Gate Keeper is now ready! Run "gate-keeper" to start.');
 

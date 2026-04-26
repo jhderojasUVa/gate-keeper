@@ -1,4 +1,4 @@
-import { WSResponse } from '../../src/server/response.interface.ts';
+import { WSResponse } from '../../src/server/response.interface.js';
 
 describe('WSResponse Interface', () => {
     it('should correctly stringify a message object', () => {

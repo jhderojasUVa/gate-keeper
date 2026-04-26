@@ -1,13 +1,58 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-const createNode = (overrides = {}) => ({
+interface PublicMainModule {
+    getWsPort: () => Promise<number>;
+    formatTime: () => string;
+    createLogElement: (messageObj: { success?: boolean; type?: string; data?: unknown }) => {
+        className: string;
+        innerHTML: string;
+    };
+    connectToWs: () => Promise<void>;
+    updateCommitStatus: (commitStatusDiv: { className: string }, canCommitOverride?: boolean) => Promise<void>;
+}
+
+interface MockNode {
+    className: string;
+    textContent: string;
+    innerHTML: string;
+    children: MockNode[];
+    scrollTop: number;
+    scrollHeight: number;
+    appendChild: (child: MockNode) => void;
+    querySelector: (...args: unknown[]) => MockNode | null;
+}
+
+interface MockSocket {
+    onopen: (() => void | Promise<void>) | null;
+    onmessage: ((event: { data: string }) => void | Promise<void>) | null;
+    onclose: (() => void) | null;
+    onerror: (() => void) | null;
+    close: Mock;
+    send: Mock;
+}
+
+type GlobalAssignments = {
+    document: {
+        createElement: Mock;
+        getElementById: Mock;
+    };
+    window: {
+        location: {
+            hostname: string;
+        };
+    };
+    fetch: Mock;
+    WebSocket: Mock;
+};
+
+const createNode = (overrides: Partial<MockNode> = {}): MockNode => ({
     className: '',
     textContent: '',
     innerHTML: '',
     children: [],
     scrollTop: 0,
     scrollHeight: 0,
-    appendChild(child) {
+    appendChild(child: MockNode) {
         this.children.push(child);
         this.scrollHeight = this.children.length;
     },
@@ -15,9 +60,19 @@ const createNode = (overrides = {}) => ({
     ...overrides,
 });
 
+const requireHandler = <T>(handler: T | null, name: string): T => {
+    if (!handler) {
+        throw new Error(`Expected ${name} handler to be defined.`);
+    }
+
+    return handler;
+};
+
 describe('Public JS main', () => {
-    let elements;
-    let module;
+    let elements: Record<string, MockNode>;
+    let module: PublicMainModule;
+    let fetchMock: Mock;
+    let webSocketMock: Mock;
 
     beforeEach(async () => {
         vi.restoreAllMocks();
@@ -25,7 +80,6 @@ describe('Public JS main', () => {
         vi.resetModules();
 
         process.env.VITEST = 'true';
-
         const wsText = createNode();
         elements = {
             'ws-status': createNode({
@@ -38,33 +92,36 @@ describe('Public JS main', () => {
             'commit-status-desc': createNode(),
         };
 
-        global.document = {
+        (globalThis as unknown as GlobalAssignments).document = {
             createElement: vi.fn(() => createNode()),
-            getElementById: vi.fn((id) => elements[id]),
+            getElementById: vi.fn((id: string) => elements[id]),
         };
 
-        global.window = {
+        (globalThis as unknown as GlobalAssignments).window = {
             location: { hostname: 'localhost' },
         };
 
-        global.fetch = vi.fn();
-        global.WebSocket = vi.fn();
+        fetchMock = vi.fn();
+        webSocketMock = vi.fn();
+        (globalThis as unknown as GlobalAssignments).fetch = fetchMock;
+        (globalThis as unknown as GlobalAssignments).WebSocket = webSocketMock;
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
+        // @ts-expect-error Untyped browser module under test.
         module = await import('../../public/js/main.mjs');
     });
 
     it('getWsPort returns data.port on success', async () => {
-        global.fetch.mockResolvedValue({ json: async () => ({ port: 1234 }) });
+        fetchMock.mockResolvedValue({ json: async () => ({ port: 1234 }) });
 
         const port = await module.getWsPort();
 
         expect(port).toBe(1234);
-        expect(global.fetch).toHaveBeenCalledWith('/ws-port');
+        expect(fetchMock).toHaveBeenCalledWith('/ws-port');
     });
 
     it('getWsPort returns fallback on fetch failure', async () => {
-        global.fetch.mockRejectedValue(new Error('no net'));
+        fetchMock.mockRejectedValue(new Error('no net'));
 
         const port = await module.getWsPort();
 
@@ -116,19 +173,19 @@ describe('Public JS main', () => {
     });
 
     it('updateCommitStatus fetches server status when override is omitted', async () => {
-        global.fetch.mockResolvedValue({
+        fetchMock.mockResolvedValue({
             ok: true,
             json: async () => ({ cancommit: true }),
         });
 
         await module.updateCommitStatus(elements['commit-status']);
 
-        expect(global.fetch).toHaveBeenCalledWith('/cancommit', expect.objectContaining({ method: 'GET' }));
+        expect(fetchMock).toHaveBeenCalledWith('/cancommit', expect.objectContaining({ method: 'GET' }));
         expect(elements['commit-status'].className).toContain('success');
     });
 
     it('updateCommitStatus handles server error gracefully', async () => {
-        global.fetch.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+        fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
 
         await module.updateCommitStatus(elements['commit-status']);
 
@@ -138,8 +195,8 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs reconnects when WebSocket construction fails', async () => {
-        global.fetch.mockResolvedValue({ json: async () => ({ port: 4321 }) });
-        global.WebSocket.mockImplementation(() => {
+        fetchMock.mockResolvedValue({ json: async () => ({ port: 4321 }) });
+        webSocketMock.mockImplementation(() => {
             throw new Error('socket creation failed');
         });
 
@@ -147,21 +204,21 @@ describe('Public JS main', () => {
 
         expect(elements['ws-status'].className).toContain('disconnected');
 
-        global.WebSocket.mockImplementation(() => ({
+        webSocketMock.mockImplementation(() => ({
             close: vi.fn(),
             send: vi.fn(),
         }));
 
         await vi.advanceTimersByTimeAsync(5000);
 
-        expect(global.WebSocket).toHaveBeenCalledTimes(2);
+        expect(webSocketMock).toHaveBeenCalledTimes(2);
     });
 
     it('connectToWs handles status updates with failing scripts and close reconnects', async () => {
-        const sockets = [];
-        global.fetch.mockResolvedValue({ json: async () => ({ port: 5555 }) });
-        global.WebSocket.mockImplementation(() => {
-            const socket = {
+        const sockets: MockSocket[] = [];
+        fetchMock.mockResolvedValue({ json: async () => ({ port: 5555 }) });
+        webSocketMock.mockImplementation(() => {
+            const socket: MockSocket = {
                 onopen: null,
                 onmessage: null,
                 onclose: null,
@@ -174,8 +231,8 @@ describe('Public JS main', () => {
         });
 
         await module.connectToWs();
-        await sockets[0].onopen();
-        sockets[0].onmessage({
+        await requireHandler(sockets[0]?.onopen ?? null, 'onopen')();
+        await requireHandler(sockets[0]?.onmessage ?? null, 'onmessage')({
             data: JSON.stringify({
                 type: 'STATUS_UPDATE',
                 data: {
@@ -189,15 +246,15 @@ describe('Public JS main', () => {
         expect(elements['log-window'].children).toHaveLength(1);
         expect(elements['log-window'].children[0].innerHTML).toContain('tests: Failed');
 
-        sockets[0].onclose();
+        requireHandler(sockets[0]?.onclose ?? null, 'onclose')();
         expect(elements['msg-type'].textContent).toBe('Offline');
 
         await vi.advanceTimersByTimeAsync(5000);
-        expect(global.WebSocket).toHaveBeenCalledTimes(2);
+        expect(webSocketMock).toHaveBeenCalledTimes(2);
     });
 
     it('connectToWs logs non-status messages and refreshes commit status', async () => {
-        const socket = {
+        const socket: MockSocket = {
             onopen: null,
             onmessage: null,
             onclose: null,
@@ -206,7 +263,7 @@ describe('Public JS main', () => {
             send: vi.fn(),
         };
 
-        global.fetch
+        fetchMock
             .mockResolvedValueOnce({ json: async () => ({ port: 8088 }) })
             .mockResolvedValueOnce({
                 ok: true,
@@ -216,11 +273,11 @@ describe('Public JS main', () => {
                 ok: true,
                 json: async () => ({ cancommit: false }),
             });
-        global.WebSocket.mockImplementation(() => socket);
+        webSocketMock.mockImplementation(() => socket);
 
         await module.connectToWs();
-        await socket.onopen();
-        await socket.onmessage({
+        await requireHandler(socket.onopen, 'onopen')();
+        await requireHandler(socket.onmessage, 'onmessage')({
             data: JSON.stringify({
                 type: 'INFO',
                 data: 'Heads up',
@@ -236,7 +293,7 @@ describe('Public JS main', () => {
     });
 
     it('connectToWs handles invalid JSON messages and websocket errors', async () => {
-        const socket = {
+        const socket: MockSocket = {
             onopen: null,
             onmessage: null,
             onclose: null,
@@ -245,12 +302,12 @@ describe('Public JS main', () => {
             send: vi.fn(),
         };
 
-        global.fetch.mockResolvedValue({ json: async () => ({ port: 9009 }) });
-        global.WebSocket.mockImplementation(() => socket);
+        fetchMock.mockResolvedValue({ json: async () => ({ port: 9009 }) });
+        webSocketMock.mockImplementation(() => socket);
 
         await module.connectToWs();
-        socket.onmessage({ data: 'invalid json' });
-        socket.onerror();
+        await requireHandler(socket.onmessage, 'onmessage')({ data: 'invalid json' });
+        requireHandler(socket.onerror, 'onerror')();
 
         expect(elements['log-window'].children).toHaveLength(1);
         expect(elements['log-window'].children[0].innerHTML).toContain('PARSE_ERROR');

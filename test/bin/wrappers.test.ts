@@ -13,6 +13,7 @@ describe('bin wrappers', () => {
     });
 
     it('gate-keeper wrapper launches the built server entrypoint', async () => {
+        // @ts-expect-error Untyped JS bin wrapper under test.
         await import('../../bin/gate-keeper.js');
 
         expect(launchCliMock).toHaveBeenCalledWith({
@@ -22,6 +23,7 @@ describe('bin wrappers', () => {
     });
 
     it('gate-keeper-init wrapper launches the built init entrypoint', async () => {
+        // @ts-expect-error Untyped JS bin wrapper under test.
         await import('../../bin/gate-keeper-init.js');
 
         expect(launchCliMock).toHaveBeenCalledWith({

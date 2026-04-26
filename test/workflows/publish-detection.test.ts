@@ -1,8 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'child_process';
-import { writeFileSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
 
 /**
  * Test Suite: Release Type Detection Logic from .github/workflows/publish.yml
@@ -15,17 +11,17 @@ import { join } from 'path';
  */
 
 // Simulate the bash detection logic from the workflow
-function detectReleaseType(logContent, includeChoreRelease = false) {
+function detectReleaseType(logContent: string, includeChoreRelease = false): 'major' | 'minor' | 'patch' | 'none' {
   // Filter out chore(release): commits to avoid release loops
   let filtered = logContent;
   if (!includeChoreRelease) {
     filtered = logContent
       .split('\n')
-      .filter(line => !line.match(/^chore\(release\):/))
+      .filter((line: string) => !line.match(/^chore\(release\):/))
       .join('\n');
   }
 
-  let type = 'none';
+  let type: 'major' | 'minor' | 'patch' | 'none' = 'none';
 
   // Priority 1: BREAKING CHANGE or ! suffix
   if (

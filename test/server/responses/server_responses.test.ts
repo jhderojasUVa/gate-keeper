@@ -1,5 +1,5 @@
-import * as serverResponses from '../../../src/server/responses/server_responses.ts';
-import { TYPES_MESSAGES } from '../../../src/models/wsServerRequest.model.ts';
+import * as serverResponses from '../../../src/server/responses/server_responses.js';
+import { TYPES_MESSAGES } from '../../../src/models/wsServerRequest.model.js';
 
 describe('Server Responses', () => {
     it('should define connection response', () => {

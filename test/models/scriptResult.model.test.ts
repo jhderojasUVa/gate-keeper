@@ -1,4 +1,4 @@
-import { scriptResult } from '../../src/models/scriptResult.model.ts';
+import { scriptResult } from '../../src/models/scriptResult.model.js';
 
 describe('Script Result Model', () => {
     it('should have the correct initial values', () => {
