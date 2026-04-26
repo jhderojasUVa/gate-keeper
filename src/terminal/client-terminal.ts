@@ -15,10 +15,49 @@ let logBox: blessed.Widgets.BoxElement | null = null;
 let wsStatusBox: blessed.Widgets.BoxElement | null = null;
 let statusMessageBox: blessed.Widgets.BoxElement | null = null;
 
+interface TerminalUiRefs {
+    screen?: blessed.Widgets.Screen | null;
+    statusBox?: blessed.Widgets.BoxElement | null;
+    logBox?: blessed.Widgets.BoxElement | null;
+    wsStatusBox?: blessed.Widgets.BoxElement | null;
+    statusMessageBox?: blessed.Widgets.BoxElement | null;
+}
+
+const resolveUiRefs = (uiRefs: TerminalUiRefs = {}): Required<TerminalUiRefs> => ({
+    screen: Object.prototype.hasOwnProperty.call(uiRefs, 'screen') ? uiRefs.screen ?? null : screen,
+    statusBox: Object.prototype.hasOwnProperty.call(uiRefs, 'statusBox') ? uiRefs.statusBox ?? null : statusBox,
+    logBox: Object.prototype.hasOwnProperty.call(uiRefs, 'logBox') ? uiRefs.logBox ?? null : logBox,
+    wsStatusBox: Object.prototype.hasOwnProperty.call(uiRefs, 'wsStatusBox') ? uiRefs.wsStatusBox ?? null : wsStatusBox,
+    statusMessageBox: Object.prototype.hasOwnProperty.call(uiRefs, 'statusMessageBox')
+        ? uiRefs.statusMessageBox ?? null
+        : statusMessageBox,
+});
+
+/**
+ * Sets terminal UI references.
+ */
+export const setTerminalUiRefs = (uiRefs: TerminalUiRefs = {}): void => {
+    if (Object.prototype.hasOwnProperty.call(uiRefs, 'screen')) {
+        screen = uiRefs.screen ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(uiRefs, 'statusBox')) {
+        statusBox = uiRefs.statusBox ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(uiRefs, 'logBox')) {
+        logBox = uiRefs.logBox ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(uiRefs, 'wsStatusBox')) {
+        wsStatusBox = uiRefs.wsStatusBox ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(uiRefs, 'statusMessageBox')) {
+        statusMessageBox = uiRefs.statusMessageBox ?? null;
+    }
+};
+
 /**
  * Formats timestamp for logs
  */
-const formatTime = (): string => {
+export const formatTime = (): string => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', {
         hour12: false,
@@ -31,7 +70,7 @@ const formatTime = (): string => {
 /**
  * Gets WebSocket port from server
  */
-const getWsPort = async (serverUrl: string): Promise<number> => {
+export const getWsPort = async (serverUrl: string): Promise<number> => {
     try {
         const response = await fetch(`${serverUrl}/ws-port`);
         const data = await response.json() as { port: number };
@@ -45,7 +84,7 @@ const getWsPort = async (serverUrl: string): Promise<number> => {
 /**
  * Checks commit status from server
  */
-const checkCommitStatus = async (serverUrl: string): Promise<boolean> => {
+export const checkCommitStatus = async (serverUrl: string): Promise<boolean> => {
     try {
         const response = await fetch(`${serverUrl}/cancommit`);
         const data = await response.json() as { cancommit: boolean };
@@ -59,8 +98,9 @@ const checkCommitStatus = async (serverUrl: string): Promise<boolean> => {
 /**
  * Updates the commit status display
  */
-const updateCommitStatus = (canCommit: boolean): void => {
-    if (!statusBox) return;
+export const updateCommitStatus = (canCommit: boolean, uiRefs: TerminalUiRefs = {}): void => {
+    const { screen: activeScreen, statusBox: activeStatusBox } = resolveUiRefs(uiRefs);
+    if (!activeStatusBox) return;
 
     const title = canCommit ? 'Ready to Commit' : 'Commit Blocked';
     const desc = canCommit
@@ -70,17 +110,21 @@ const updateCommitStatus = (canCommit: boolean): void => {
     const color = canCommit ? colors.text.green : colors.text.red;
     const bgColor = canCommit ? colors.background.green : colors.background.red;
 
-    statusBox.setContent(
+    activeStatusBox.setContent(
         `${color}${bgColor} ${title} ${colors.reset}\n\n${desc}`
     );
-    screen?.render();
+    activeScreen?.render();
 };
 
 /**
  * Adds a log entry to the log box
  */
-const addLogEntry = (message: { success?: boolean; type?: string; data?: unknown }): void => {
-    if (!logBox) return;
+export const addLogEntry = (
+    message: { success?: boolean; type?: string; data?: unknown },
+    uiRefs: TerminalUiRefs = {}
+): void => {
+    const { logBox: activeLogBox, screen: activeScreen } = resolveUiRefs(uiRefs);
+    if (!activeLogBox) return;
 
     const isError = message.success === false ||
                    message.type === 'ERROR' ||
@@ -101,16 +145,17 @@ const addLogEntry = (message: { success?: boolean; type?: string; data?: unknown
 
     const logEntry = `[${time}] ${color}${icon} ${msgType}${colors.reset}\n${dataContent}\n\n`;
 
-    logBox.insertTop(logEntry);
-    logBox.setScrollPerc(0);
-    screen?.render();
+    activeLogBox.insertTop(logEntry);
+    activeLogBox.setScrollPerc(0);
+    activeScreen?.render();
 };
 
 /**
  * Updates WebSocket connection status
  */
-const updateWsStatus = (status: string): void => {
-    if (!wsStatusBox) return;
+export const updateWsStatus = (status: string, uiRefs: TerminalUiRefs = {}): void => {
+    const { wsStatusBox: activeWsStatusBox, screen: activeScreen } = resolveUiRefs(uiRefs);
+    if (!activeWsStatusBox) return;
 
     let color: string, text: string;
     switch (status) {
@@ -131,38 +176,55 @@ const updateWsStatus = (status: string): void => {
             text = 'Unknown';
     }
 
-    wsStatusBox.setContent(`${color}●${colors.reset} ${text}`);
-    screen?.render();
+    activeWsStatusBox.setContent(`${color}●${colors.reset} ${text}`);
+    activeScreen?.render();
 };
 
 /**
  * Updates the status message in the bottom left box
  */
-const updateStatusMessage = (message: string): void => {
-    if (!statusMessageBox) return;
+export const updateStatusMessage = (message: string, uiRefs: TerminalUiRefs = {}): void => {
+    const { statusMessageBox: activeStatusMessageBox, screen: activeScreen } = resolveUiRefs(uiRefs);
+    if (!activeStatusMessageBox) return;
 
-    statusMessageBox.setContent(message);
-    screen?.render();
+    activeStatusMessageBox.setContent(message);
+    activeScreen?.render();
 };
+
+interface WebSocketConnectionOptions {
+    createWebSocket?: (wsUrl: string) => WebSocket;
+    reconnectDelay?: number;
+    scheduleReconnect?: typeof setTimeout;
+    statusCheckUrl?: string;
+}
 
 /**
  * Connects to WebSocket server
  */
-const connectWebSocket = (wsUrl: string): void => {
+export const connectWebSocket = (wsUrl: string, options: WebSocketConnectionOptions = {}): void => {
+    const createWebSocket = options.createWebSocket ?? ((url: string) => new WebSocket(url));
+    const reconnectDelay = options.reconnectDelay ?? 5000;
+    const scheduleReconnect = options.scheduleReconnect ?? setTimeout;
+    const statusCheckUrl = options.statusCheckUrl ?? 'http://localhost:9000';
+
     updateWsStatus('connecting');
 
+    const initReconnect = (): void => {
+        updateWsStatus('disconnected');
+        scheduleReconnect(() => connectWebSocket(wsUrl, options), reconnectDelay);
+    };
+
     try {
-        wsConnection = new WebSocket(wsUrl);
+        wsConnection = createWebSocket(wsUrl);
     } catch (error) {
         console.error('Failed to create WebSocket connection:', error);
-        updateWsStatus('disconnected');
-        setTimeout(() => connectWebSocket(wsUrl), 5000);
+        initReconnect();
         return;
     }
 
     wsConnection.onopen = () => {
         updateWsStatus('connected');
-        checkCommitStatus('http://localhost:9000').then(updateCommitStatus);
+        checkCommitStatus(statusCheckUrl).then((canCommit) => updateCommitStatus(canCommit));
     };
 
     wsConnection.onmessage = (event) => {
@@ -198,8 +260,7 @@ const connectWebSocket = (wsUrl: string): void => {
     };
 
     wsConnection.onclose = () => {
-        updateWsStatus('disconnected');
-        setTimeout(() => connectWebSocket(wsUrl), 5000);
+        initReconnect();
     };
 
     wsConnection.onerror = (error) => {
@@ -211,7 +272,7 @@ const connectWebSocket = (wsUrl: string): void => {
 /**
  * Initializes the terminal UI
  */
-const initUI = (): void => {
+export const initUI = (): void => {
     // Skip UI initialization in test environment
     if (typeof process !== 'undefined' && process.env.VITEST) {
         return;
@@ -352,7 +413,9 @@ export const startTerminalClient = async (options: TerminalClientOptions = {}): 
     updateStatusMessage(`🔌 Connecting to WebSocket at ${wsUrl}...`);
 
     // Connect to WebSocket
-    connectWebSocket(wsUrl);
+    connectWebSocket(wsUrl, {
+        statusCheckUrl: serverUrl,
+    });
 
     // Initial status check
     const canCommit = await checkCommitStatus(serverUrl);
