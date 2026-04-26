@@ -2,6 +2,7 @@
 name: Coordinator
 description: "Coordinates the Coder, Tester, and Reviewer agents to complete a task end-to-end."
 tools: [read, edit, execute, search, web, todo, agent]
+model: Auto (copilot)
 agents: [Coder, Tester, Reviewer]
 user-invocable: true
 ---

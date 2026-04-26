@@ -2,6 +2,7 @@
 name: Tester
 description: AI Agent identity and instructions for testing tasks
 tools: [read, edit, execute, search, web, todo]
+model: GPT-5.3-Codex (copilot)
 user-invocable: true
 ---
 

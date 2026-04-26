@@ -6,6 +6,7 @@
     "type": "module",
     "scripts": {
         "build": "tsgo --build",
+        "dev": "tsgo --build --watch",
         "typecheck": "tsgo --noEmit",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
@@ -19,8 +20,8 @@
         "release:major": "standard-version --release-as major"
     },
     "bin": {
-        "gate-keeper": "./dist/server/index.js",
-        "gate-keeper-init": "./dist/init.js"
+        "gate-keeper": "./bin/gate-keeper.js",
+        "gate-keeper-init": "./bin/gate-keeper-init.js"
     },
     "publishConfig": {
         "registry": "https://npm.pkg.github.com/"

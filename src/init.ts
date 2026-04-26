@@ -57,7 +57,7 @@ export const showVersion = (): void => {
     try {
         // Get the directory of the current module
         const currentDir = path.dirname(fileURLToPath(import.meta.url));
-        const packageJsonPath = path.resolve(currentDir, '../../package.json');
+        const packageJsonPath = path.resolve(currentDir, '../package.json');
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string };
 
         log(`Gate Keeper v${packageJson.version}`);

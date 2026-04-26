@@ -2,6 +2,7 @@
 name: Coder
 description: AI Agent identity and instructions for coding tasks
 tools: [read, edit, execute, search, web, todo]
+model: Claude Sonnet 4.5 (copilot)
 user-invocable: true
 ---
 

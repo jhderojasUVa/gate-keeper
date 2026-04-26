@@ -4,12 +4,19 @@ import stylisticJs from '@stylistic/eslint-plugin-js';
 import jsdoc from 'eslint-plugin-jsdoc';
 
 export default [{
+        ignores: ['dist/**'],
+    },
+    {
         files: ['**/*.js'],
         languageOptions: { sourceType: 'commonjs' },
         plugins: {
             '@stylistic/js': stylisticJs,
             'jsdoc': jsdoc
         },
+    },
+    {
+        files: ['bin/*.js'],
+        languageOptions: { sourceType: 'module' },
     },
     {
         files: ['**/*.mjs'],

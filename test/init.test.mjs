@@ -81,6 +81,10 @@ describe('gate-keeper-init', () => {
         const { showVersion } = await import('../src/init.ts');
         showVersion();
 
+        expect(fs.default.readFileSync).toHaveBeenCalledWith(
+            '/mnt/c/Projects/gate-keeper/package.json',
+            'utf8',
+        );
         expect(consoleLogSpy).toHaveBeenCalledWith('Gate Keeper v9.0.0');
 
         consoleLogSpy.mockRestore();
