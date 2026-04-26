@@ -2,14 +2,21 @@ import http from 'http';
 import { afterEach, beforeEach } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { STATE } from '../../src/libs/state.mjs';
-import { createMcpApp } from '../../src/server/mcp_server.mjs';
+import { STATE } from '../../src/libs/state.ts';
+import { createMcpApp } from '../../src/server/mcp_server.ts';
 
 describe('MCP Server', () => {
     let server;
     let transport;
     let client;
     let baseUrl;
+
+    const closeWithTimeout = async (promiseFactory, timeoutMs = 3000) => {
+        await Promise.race([
+            promiseFactory(),
+            new Promise((resolve) => setTimeout(resolve, timeoutMs))
+        ]);
+    };
 
     beforeEach(async () => {
         STATE.clearAll();
@@ -32,12 +39,23 @@ describe('MCP Server', () => {
     });
 
     afterEach(async () => {
+        if (client) {
+            await closeWithTimeout(() => client.close());
+            client = undefined;
+        }
+
         if (transport) {
-            await transport.close();
+            await closeWithTimeout(() => transport.close());
+            transport = undefined;
         }
 
         if (server) {
-            await new Promise((resolve) => server.close(resolve));
+            // Ensure keep-alive sockets do not outlive test teardown.
+            if (typeof server.closeAllConnections === 'function') {
+                server.closeAllConnections();
+            }
+            await closeWithTimeout(() => new Promise((resolve) => server.close(resolve)));
+            server = undefined;
         }
     });
 

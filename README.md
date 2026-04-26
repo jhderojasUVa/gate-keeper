@@ -2,6 +2,14 @@
 
 Working on trunk development with JS or TS? This tool is the first line of defence about pushing bad code. It consist in an application running in the background that will check your code before commit (or at any time if you enable it when detecting a change on your code) that will run the scripts you want and let you commit or not by adding a pre-commit hook.
 
+## TypeScript 7 Beta
+
+This repository is migrated to TypeScript and uses TypeScript 7 beta via `@typescript/native-preview`.
+
+- Type checking/build CLI: `tsgo`
+- Source code: `src/**/*.ts`
+- Build output: `dist/**`
+
 For detailed instructions on how to install and run the application, see [HOW_TO.md](HOW_TO.md).
 
 ## Usage
@@ -40,6 +48,28 @@ gate-keeper --help
 - Eslint: Lint code
 - Standard-version: For releases
 
+## Development Scripts
+
+```bash
+# Build with TypeScript 7 beta
+npm run build
+
+# Type-check only
+npm run typecheck
+
+# Run tests
+npm test
+
+# Run lint
+npm run lint
+```
+
+`npm run test:unit` runs the full suite in two phases:
+1. Coverage run for the main test suite.
+2. Dedicated run for `test/server/mcp_server.test.mjs`.
+
+This keeps test execution stable while preserving full test coverage checks for the rest of the suite.
+
 # Config file
 
 For running this tool you will need to have a configuration file on the root of your project `gate-keeper.conf.json`.
@@ -63,6 +93,7 @@ You can configure the server by passing this environmental variables:
 - `GATE_KEEPER_PORT`: By default 9000
 - `GATE_KEEPER_WS_PORT`: By default 9001
 - `GATE_KEEPER_MCP_PORT`: By default 9002
+- `GATE_KEEPER_MCP_HOST`: By default 127.0.0.1
 - `GATE_KEEPER_HTTPS`: Boolean, by default true
 
 When you start `gate-keeper server`, the process also exposes an MCP endpoint for AI agents at `http://127.0.0.1:9002/mcp` by default. The MCP tool `get_gate_keeper_status` returns whether Gate Keeper is still running scripts, whether the user can commit, and the current script results.

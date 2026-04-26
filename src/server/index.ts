@@ -1,16 +1,12 @@
 #!/usr/bin/env node
 
 // Gate Keeper Server Entry Point
-// This script starts the Gate Keeper server, which provides a web interface and WebSocket for code quality checks.
-// It can optionally open a browser to the server's URL when run with the --open flag.
-
-// Import necessary modules
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import path from 'path';
 
 // Import message types
-import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
+import { TYPES_MESSAGES } from '../models/wsServerRequest.model.js';
 
 // Determine if running as main module (works for npm-linked commands)
 const currentFileUrl = import.meta.url;
@@ -18,34 +14,24 @@ const currentFilePath = fileURLToPath(currentFileUrl);
 const isMainModule = process.argv[1].includes('gate-keeper') || process.argv[1] === currentFilePath;
 
 // Ensure stdout is flushed immediately
-/**
- * Writes a log line to stdout.
- * @param {string} msg - Message to print.
- * @returns {void}
- */
-const log = (msg) => {
+const log = (msg: string): void => {
     console.log(msg);
 };
 
 /**
  * Helper function to exit with proper flushing
- * @param {number} code - Exit code
  */
-const exitWithCode = (code) => {
+const exitWithCode = (code: number): never => {
     process.exit(code);
 };
 
 /**
  * Converts a WSL Linux path to Windows path format
- * Example: /mnt/c/Users/... -> C:\Users\...
- * @param {string} linuxPath - The Linux path
- * @returns {string} The Windows path
  */
-export const toWindowsPath = (linuxPath) => {
+export const toWindowsPath = (linuxPath: string): string => {
     if (!linuxPath.startsWith('/mnt/')) {
         return linuxPath;
     }
-    // /mnt/c/path -> C:\path
     const parts = linuxPath.split('/');
     if (parts[2]) {
         const drive = parts[2].toUpperCase();
@@ -57,9 +43,8 @@ export const toWindowsPath = (linuxPath) => {
 
 /**
  * Detects if running in WSL (Windows Subsystem for Linux)
- * @returns {boolean} True if running in WSL
  */
-export const isWSL = () => {
+export const isWSL = (): boolean => {
     try {
         const releaseInfo = fs.readFileSync('/proc/version', 'utf8').toLowerCase();
         return releaseInfo.includes('microsoft') || releaseInfo.includes('wsl');
@@ -71,7 +56,7 @@ export const isWSL = () => {
 /**
  * Shows help information
  */
-export const showHelp = () => {
+export const showHelp = (): void => {
     log(`
 Gate Keeper - Code Quality Guardian
 
@@ -98,6 +83,7 @@ Examples:
   gate-keeper server --open       Start and open browser
   gate-keeper client              Open graphical client in browser
   gate-keeper client-terminal     Open terminal client
+  gate-keeper client-terminal     Open terminal client
   GATE_KEEPER_PORT=8080 gate-keeper server  Start on port 8080
 
 For more information, see: https://github.com/jhderojasUVa/gate-keeper
@@ -106,34 +92,31 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
 
 /**
  * Opens the graphical client in a browser pointing to the server's web interface
- * @async
- * @returns {Promise<void>}
  */
-export const openClient = async () => {
+export const openClient = async (): Promise<void> => {
     try {
         const { exec } = await import('child_process');
-        
+
         const port = process.env.GATE_KEEPER_PORT || 9000;
         const isHttps = process.env.GATE_KEEPER_HTTPS !== 'false';
         const protocol = isHttps ? 'https' : 'http';
         const url = `${protocol}://localhost:${port}`;
-        
+
         log(`🌐 Opening graphical client at ${url}...`);
-        
-        let command;
-        
+
+        let command: string;
+
         if (process.platform === 'darwin') {
             command = `open "${url}"`;
         } else if (process.platform === 'win32') {
             command = `start "${url}"`;
         } else if (isWSL()) {
-            // In WSL, use PowerShell to open the URL
             log('   (Running in WSL, opening host browser...)');
             command = `powershell.exe -Command "Start-Process '${url}'"`;
         } else {
             command = `xdg-open "${url}"`;
         }
-        
+
         exec(command, (error) => {
             if (error) {
                 log(`❌ Failed to open browser: ${error.message}`);
@@ -144,7 +127,7 @@ export const openClient = async () => {
             }
         });
     } catch (error) {
-        log(`❌ Error opening graphical client: ${error.message}`);
+        log(`❌ Error opening graphical client: ${(error as Error).message}`);
         exitWithCode(1);
     }
 };
@@ -152,12 +135,11 @@ export const openClient = async () => {
 /**
  * Shows version information
  */
-export const showVersion = () => {
+export const showVersion = (): void => {
     try {
-        // Get the directory of the current module
         const currentDir = path.dirname(fileURLToPath(import.meta.url));
         const packageJsonPath = path.resolve(currentDir, '../../package.json');
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string };
         log(`Gate Keeper v${packageJson.version}`);
     } catch (error) {
         console.error('Failed to read package.json:', error);
@@ -167,53 +149,44 @@ export const showVersion = () => {
 
 /**
  * Starts the Gate Keeper server.
- * This function initializes the Express server, loads configuration, executes initial scripts,
- * and starts the WebSocket server.
- * @async
- * @returns {Promise<void>} A promise that resolves when the server is fully started.
  */
-export const startGateKeeper = async () => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const startGateKeeper = async (): Promise<void> => {
     try {
         log('🚀 Starting Gate Keeper server...');
 
-        // Dynamic imports to avoid issues when just showing help
-        let expressLog, getConfigurationData, loadPlugins, configFileExists, executeAllScripts, GATE_KEEPER_STATE;
-        let express_server, express_port, express_ws_port, isHTTPS, startWebSocket, broadcast, startMcpServer, mcp_port;
+        // Use dynamic imports to avoid loading modules when just showing help
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let expressLog: any,
+            getConfigurationData: any,
+            loadPlugins: any,
+            configFileExists: any,
+            executeAllScripts: any,
+            GATE_KEEPER_STATE: any,
+            express_server: any,
+            express_port: any,
+            express_ws_port: any,
+            isHTTPS: any,
+            startWebSocket: any,
+            broadcast: any,
+            startMcpServer: any,
+            mcp_port: any;
 
         try {
             log('📦 Loading dependencies...');
-            const logModule = await import('../libs/log.mjs');
-            expressLog = logModule.expressLog;
-            
-            const confModule = await import('../libs/load_config.mjs');
-            getConfigurationData = confModule.getConfigurationData;
-            loadPlugins = confModule.loadPlugins;
-            configFileExists = confModule.configFileExists;
-            
-            const scriptsModule = await import('../libs/execute_scripts.mjs');
-            executeAllScripts = scriptsModule.executeAllScripts;
-            
-            const stateModule = await import('../libs/state.mjs');
-            GATE_KEEPER_STATE = stateModule.STATE;
-            
-            log('📦 Loading server configuration...');
-            const serverConfModule = await import('./server_conf.mjs');
-            express_server = serverConfModule.express_server;
-            express_port = serverConfModule.express_port;
-            express_ws_port = serverConfModule.express_ws_port;
-            isHTTPS = serverConfModule.isHTTPS;
-            
-            const wsModule = await import('./server_ws.mjs');
-            startWebSocket = wsModule.startWebSocket;
-            broadcast = wsModule.broadcast;
+            ({ expressLog } = await import('../libs/log.js'));
+            ({ getConfigurationData, loadPlugins, configFileExists } = await import('../libs/load_config.js'));
+            ({ executeAllScripts } = await import('../libs/execute_scripts.js'));
+            ({ STATE: GATE_KEEPER_STATE } = await import('../libs/state.js'));
 
-            const mcpModule = await import('./mcp_server.mjs');
-            startMcpServer = mcpModule.startMcpServer;
-            mcp_port = mcpModule.mcp_port;
+            log('📦 Loading server configuration...');
+            ({ express_server, express_port, express_ws_port, isHTTPS } = await import('./server_conf.js'));
+            ({ startWebSocket, broadcast } = await import('./server_ws.js'));
+            ({ startMcpServer, mcp_port } = await import('./mcp_server.js'));
         } catch (importError) {
-            log(`❌ Error loading dependencies: ${importError.message}`);
-            if (importError.stack) {
-                console.error(importError.stack);
+            log(`❌ Error loading dependencies: ${(importError as Error).message}`);
+            if ((importError as Error).stack) {
+                console.error((importError as Error).stack);
             }
             exitWithCode(1);
         }
@@ -227,7 +200,7 @@ export const startGateKeeper = async () => {
 
         // Start the Express server and wait for it to be listening
         log(`🌐 Starting ${isHTTPS ? 'HTTPS' : 'HTTP'} server on port ${express_port}...`);
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             express_server.listen(express_port, () => {
                 const protocol = isHTTPS ? 'https' : 'http';
                 const url = `${protocol}://localhost:${express_port}`;
@@ -238,12 +211,12 @@ export const startGateKeeper = async () => {
                 expressLog({
                     message: `${isHTTPS ? 'HTTPS' : 'HTTP'} server started at ${url}`,
                     kind: `${isHTTPS ? 'HTTPS' : 'HTTP'} SERVER`,
-                    severity: 'INFO'
+                    severity: 'INFO',
                 });
                 resolve();
             });
 
-            express_server.on('error', (error) => {
+            express_server.on('error', (error: Error) => {
                 log(`❌ Failed to start server: ${error.message}`);
                 reject(error);
             });
@@ -286,15 +259,15 @@ export const startGateKeeper = async () => {
             const statusUpdate = {
                 type: TYPES_MESSAGES.STATUS_UPDATE,
                 data: GATE_KEEPER_STATE.getStatus(),
-                success: true
+                success: true,
             };
             broadcast(statusUpdate);
         } catch (e) {
-            log(`❌ Error executing scripts: ${e.message}`);
+            log(`❌ Error executing scripts: ${(e as Error).message}`);
             expressLog({
                 message: `Unable to execute the scripts\n        ${e}`,
                 kind: 'SCRIPTS',
-                severity: 'ERROR'
+                severity: 'ERROR',
             });
         } finally {
             GATE_KEEPER_STATE.setWorking(false);
@@ -309,9 +282,9 @@ export const startGateKeeper = async () => {
         log('   Press Ctrl+C to stop the server.');
 
     } catch (error) {
-        log(`💥 Failed to start Gate Keeper: ${error.message}`);
-        if (error.stack) {
-            console.error(error.stack);
+        log(`💥 Failed to start Gate Keeper: ${(error as Error).message}`);
+        if ((error as Error).stack) {
+            console.error((error as Error).stack);
         }
         log('   Make sure you have run "npm install" in the gate-keeper project directory.');
         exitWithCode(1);
@@ -319,9 +292,7 @@ export const startGateKeeper = async () => {
 };
 
 // Execute if run directly (not imported as a module)
-// Check if running as main - works for both direct execution and npm-linked commands
 if (isMainModule) {
-    // Parse command line arguments
     const args = process.argv.slice(2);
 
     if (args.includes('--help') || args.includes('-h')) {
@@ -334,7 +305,6 @@ if (isMainModule) {
         exitWithCode(0);
     }
 
-    // Check if a command was provided
     if (args.length === 0) {
         log(`❌ Missing required command`);
         log('');
@@ -342,10 +312,9 @@ if (isMainModule) {
         exitWithCode(1);
     }
 
-    // Determine the mode: server, client, or client-terminal
-    let mode = null;
+    let mode: string | null = null;
     let modeIndex = -1;
-    
+
     if (args.includes('server')) {
         mode = 'server';
         modeIndex = args.indexOf('server');
@@ -356,28 +325,25 @@ if (isMainModule) {
         mode = 'client-terminal';
         modeIndex = args.indexOf('client-terminal');
     } else {
-        // Invalid command provided
         log(`❌ Unknown command: ${args[0]}`);
         log('');
         showHelp();
         exitWithCode(1);
     }
 
-    // Extract options after the mode command
     const options = [
         ...args.slice(0, modeIndex),
-        ...args.slice(modeIndex + 1)
+        ...args.slice(modeIndex + 1),
     ];
 
     const openBrowser = options.includes('--open');
 
-    // Check for invalid arguments based on mode
-    let validOptions = [];
+    let validOptions: string[] = [];
     if (mode === 'server') {
         validOptions = ['--open'];
-    } // client and client-terminal have no options
+    }
 
-    const invalidArgs = options.filter(arg => !validOptions.includes(arg));
+    const invalidArgs = options.filter((arg) => !validOptions.includes(arg));
     if (invalidArgs.length > 0) {
         log(`❌ Unknown argument(s): ${invalidArgs.join(', ')}`);
         log('   Use --help for usage information.');
@@ -385,19 +351,17 @@ if (isMainModule) {
     }
 
     if (mode === 'client') {
-        // Client mode: just open the browser to the public directory
         if (openBrowser) {
             log('⚠️  --open flag ignored in client mode');
         }
         openClient();
     } else if (mode === 'client-terminal') {
-        // Terminal client mode: start the terminal client
         if (openBrowser) {
             log('⚠️  --open flag ignored in client-terminal mode');
         }
         (async () => {
             try {
-                const { startTerminalClient } = await import('../terminal/client-terminal.mjs');
+                const { startTerminalClient } = await import('../terminal/client-terminal.js');
                 await startTerminalClient();
             } catch (error) {
                 console.error('Failed to start terminal client:', error);
@@ -405,17 +369,16 @@ if (isMainModule) {
             }
         })();
     } else {
-        // Server mode: start the server (and optionally open browser)
         (async () => {
             try {
                 await startGateKeeper();
                 if (openBrowser) {
                     const { exec } = await import('child_process');
-                    const { isHTTPS, express_port } = await import('./server_conf.mjs');
+                    const { isHTTPS, express_port } = await import('./server_conf.js');
                     const protocol = isHTTPS ? 'https' : 'http';
                     const url = `${protocol}://localhost:${express_port}`;
                     log(`🌐 Opening browser to ${url}...`);
-                    let command;
+                    let command: string;
                     if (process.platform === 'darwin') {
                         command = `open "${url}"`;
                     } else if (process.platform === 'win32') {
@@ -433,9 +396,9 @@ if (isMainModule) {
                     });
                 }
             } catch (error) {
-                log(`❌ Fatal error: ${error.message}`);
-                if (error.stack) {
-                    console.error(error.stack);
+                log(`❌ Fatal error: ${(error as Error).message}`);
+                if ((error as Error).stack) {
+                    console.error((error as Error).stack);
                 }
                 exitWithCode(1);
             }

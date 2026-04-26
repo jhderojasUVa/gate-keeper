@@ -1,7 +1,18 @@
 // State of the app - Singleton
-import { canCommit } from './scripts_check.mjs';
+import { canCommit } from './scripts_check.js';
+import type { ScriptModel } from '../models/configuration.model.js';
+
+interface StateSnapshot {
+    canCommit: boolean;
+    inProgress: boolean;
+    scripts: ScriptModel[];
+}
 
 class State {
+    public canCommit: boolean;
+    public inProgress: boolean;
+    public scripts: ScriptModel[];
+
     // Initial State
     constructor() {
         this.canCommit = false;
@@ -11,24 +22,24 @@ class State {
 
     // Actions
     // Add all
-    setResults(results) {
+    setResults(results: ScriptModel[]): this {
         this.scripts = results;
         return this;
     }
 
     // Add one
-    addResult(result) {
+    addResult(result: ScriptModel): this {
         this.scripts.push(result);
         return this;
     }
 
     // Get one by title
-    getResult(scriptTitle) {
+    getResult(scriptTitle: string): ScriptModel | undefined {
         return this.scripts.find((script) => script.name === scriptTitle);
     }
 
     // Replace
-    replaceResult(scriptContent) {
+    replaceResult(scriptContent: ScriptModel): this {
         const { name } = scriptContent;
         // replace
         this.scripts.forEach((script, index) => {
@@ -41,7 +52,7 @@ class State {
     }
 
     // Remove one
-    removeResult(scriptToRemove) {
+    removeResult(scriptToRemove: ScriptModel): this {
         const { name } = scriptToRemove;
 
         this.scripts.forEach((script, index) => {
@@ -55,14 +66,14 @@ class State {
     }
 
     // Clear all
-    clearAll() {
+    clearAll(): this {
         this.scripts = [];
 
         return this;
     }
 
     // Clear one
-    clearOneResult(scriptToClear) {
+    clearOneResult(scriptToClear: ScriptModel): this {
         const { name } = scriptToClear;
 
         this.scripts.forEach((script, index) => {
@@ -70,7 +81,7 @@ class State {
             if (script.name === name) {
                 this.scripts[index] = {
                     ...this.scripts[index],
-                    result: undefined
+                    result: undefined,
                 };
             }
         });
@@ -79,35 +90,34 @@ class State {
     }
 
     // Update canCommit
-    // I don't like this way and will be changed in the future
-    async updateCanCommit() {
+    async updateCanCommit(): Promise<this> {
         this.canCommit = await canCommit(this.scripts);
 
         return this;
     }
 
     // Explicit working state setter for long-running flows
-    setWorking(isWorking) {
+    setWorking(isWorking: boolean): this {
         this.inProgress = isWorking;
 
         return this;
     }
 
     // Snapshot of the current status for HTTP, WebSocket and MCP consumers
-    getStatus() {
+    getStatus(): StateSnapshot {
         return {
             canCommit: this.canCommit,
             inProgress: this.inProgress,
-            scripts: this.scripts
+            scripts: this.scripts,
         };
     }
 
     // Working in progress
-    isWorking() {
+    isWorking(): this {
         this.inProgress = !this.inProgress;
 
         return this;
     }
-};
+}
 
 export const STATE = new State();

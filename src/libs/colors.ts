@@ -12,7 +12,7 @@ export const colors = {
         magenta: '\x1b[35m',
         cyan: '\x1b[36m',
         white: '\x1b[37m',
-        gray: '\x1b[90m'
+        gray: '\x1b[90m',
     },
     background: {
         black: '\x1b[40m',
@@ -23,11 +23,11 @@ export const colors = {
         magenta: '\x1b[45m',
         cyan: '\x1b[46m',
         white: '\x1b[47m',
-        gray: '\x1b[100m'
-    }
+        gray: '\x1b[100m',
+    },
 };
 
 export const textStiles = {
     underline: '\x1b[4m',
-    blink: '\x1b[5m'
+    blink: '\x1b[5m',
 };

@@ -5,39 +5,36 @@
 
 import * as blessed from 'blessed';
 import { WebSocket } from 'ws';
-import { colors } from '../libs/colors.mjs';
+import { colors } from '../libs/colors.js';
 
 // Global state
-let wsConnection = null;
-let screen = null;
-let statusBox = null;
-let logBox = null;
-let wsStatusBox = null;
-let statusMessageBox = null;
+let wsConnection: WebSocket | null = null;
+let screen: blessed.Widgets.Screen | null = null;
+let statusBox: blessed.Widgets.BoxElement | null = null;
+let logBox: blessed.Widgets.BoxElement | null = null;
+let wsStatusBox: blessed.Widgets.BoxElement | null = null;
+let statusMessageBox: blessed.Widgets.BoxElement | null = null;
 
 /**
  * Formats timestamp for logs
- * @returns {string} Formatted time
  */
-const formatTime = () => {
+const formatTime = (): string => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
     }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
 };
 
 /**
  * Gets WebSocket port from server
- * @param {string} serverUrl - Server URL
- * @returns {Promise<number>} WebSocket port
  */
-const getWsPort = async (serverUrl) => {
+const getWsPort = async (serverUrl: string): Promise<number> => {
     try {
         const response = await fetch(`${serverUrl}/ws-port`);
-        const data = await response.json();
+        const data = await response.json() as { port: number };
         return data.port;
     } catch (error) {
         console.error('Failed to get ws port:', error);
@@ -47,13 +44,11 @@ const getWsPort = async (serverUrl) => {
 
 /**
  * Checks commit status from server
- * @param {string} serverUrl - Server URL
- * @returns {Promise<boolean>} Can commit status
  */
-const checkCommitStatus = async (serverUrl) => {
+const checkCommitStatus = async (serverUrl: string): Promise<boolean> => {
     try {
         const response = await fetch(`${serverUrl}/cancommit`);
-        const data = await response.json();
+        const data = await response.json() as { cancommit: boolean };
         return data.cancommit;
     } catch (error) {
         console.error('Failed to check commit permission:', error);
@@ -63,9 +58,8 @@ const checkCommitStatus = async (serverUrl) => {
 
 /**
  * Updates the commit status display
- * @param {boolean} canCommit - Whether commit is allowed
  */
-const updateCommitStatus = (canCommit) => {
+const updateCommitStatus = (canCommit: boolean): void => {
     if (!statusBox) return;
 
     const title = canCommit ? 'Ready to Commit' : 'Commit Blocked';
@@ -73,21 +67,19 @@ const updateCommitStatus = (canCommit) => {
         ? 'All checks passed. You can commit safely.'
         : 'Gates are currently closed. Check logs.';
 
-    // Color the status box
     const color = canCommit ? colors.text.green : colors.text.red;
     const bgColor = canCommit ? colors.background.green : colors.background.red;
 
     statusBox.setContent(
         `${color}${bgColor} ${title} ${colors.reset}\n\n${desc}`
     );
-    screen.render();
+    screen?.render();
 };
 
 /**
  * Adds a log entry to the log box
- * @param {Object} message - Message object
  */
-const addLogEntry = (message) => {
+const addLogEntry = (message: { success?: boolean; type?: string; data?: unknown }): void => {
     if (!logBox) return;
 
     const isError = message.success === false ||
@@ -100,7 +92,7 @@ const addLogEntry = (message) => {
     if (typeof message.data === 'object') {
         dataContent = JSON.stringify(message.data, null, 2);
     } else {
-        dataContent = message.data || '';
+        dataContent = String(message.data || '');
     }
 
     const time = formatTime();
@@ -110,18 +102,17 @@ const addLogEntry = (message) => {
     const logEntry = `[${time}] ${color}${icon} ${msgType}${colors.reset}\n${dataContent}\n\n`;
 
     logBox.insertTop(logEntry);
-    logBox.setScrollPerc(0); // Scroll to top since we insert at top
-    screen.render();
+    logBox.setScrollPerc(0);
+    screen?.render();
 };
 
 /**
  * Updates WebSocket connection status
- * @param {string} status - Connection status
  */
-const updateWsStatus = (status) => {
+const updateWsStatus = (status: string): void => {
     if (!wsStatusBox) return;
 
-    let color, text;
+    let color: string, text: string;
     switch (status) {
         case 'connected':
             color = colors.text.green;
@@ -141,25 +132,23 @@ const updateWsStatus = (status) => {
     }
 
     wsStatusBox.setContent(`${color}●${colors.reset} ${text}`);
-    screen.render();
+    screen?.render();
 };
 
 /**
  * Updates the status message in the bottom left box
- * @param {string} message - Status message
  */
-const updateStatusMessage = (message) => {
+const updateStatusMessage = (message: string): void => {
     if (!statusMessageBox) return;
 
     statusMessageBox.setContent(message);
-    screen.render();
+    screen?.render();
 };
 
 /**
  * Connects to WebSocket server
- * @param {string} wsUrl - WebSocket URL
  */
-const connectWebSocket = (wsUrl) => {
+const connectWebSocket = (wsUrl: string): void => {
     updateWsStatus('connecting');
 
     try {
@@ -173,23 +162,25 @@ const connectWebSocket = (wsUrl) => {
 
     wsConnection.onopen = () => {
         updateWsStatus('connected');
-        // Initial status check
         checkCommitStatus('http://localhost:9000').then(updateCommitStatus);
     };
 
     wsConnection.onmessage = (event) => {
         try {
-            const message = JSON.parse(event.data);
+            const message = JSON.parse(event.data as string) as {
+                type?: string;
+                success?: boolean;
+                data?: { canCommit?: boolean; scripts?: Array<{ name?: string; result?: unknown }> };
+            };
 
             if (message.type === 'STATUS_UPDATE' && message.data) {
-                updateCommitStatus(message.data.canCommit);
-                // Log scripts if available
+                updateCommitStatus(message.data.canCommit ?? false);
                 if (message.data.scripts) {
-                    message.data.scripts.forEach(script => {
+                    message.data.scripts.forEach((script) => {
                         addLogEntry({
                             success: script.result ? true : false,
                             type: 'SCRIPT_RESULT',
-                            data: `${script.name}: ${script.result || 'Failed'}`
+                            data: `${script.name}: ${script.result || 'Failed'}`,
                         });
                     });
                 }
@@ -201,7 +192,7 @@ const connectWebSocket = (wsUrl) => {
             addLogEntry({
                 success: false,
                 type: 'PARSE_ERROR',
-                data: 'Failed to parse message: ' + event.data
+                data: 'Failed to parse message: ' + event.data,
             });
         }
     };
@@ -213,14 +204,14 @@ const connectWebSocket = (wsUrl) => {
 
     wsConnection.onerror = (error) => {
         console.error('WebSocket error:', error);
-        wsConnection.close();
+        wsConnection?.close();
     };
 };
 
 /**
  * Initializes the terminal UI
  */
-const initUI = () => {
+const initUI = (): void => {
     // Skip UI initialization in test environment
     if (typeof process !== 'undefined' && process.env.VITEST) {
         return;
@@ -229,7 +220,7 @@ const initUI = () => {
     // Create screen
     screen = blessed.screen({
         smartCSR: true,
-        title: 'Gate Keeper Terminal Client'
+        title: 'Gate Keeper Terminal Client',
     });
 
     // Quit on Ctrl+C or q
@@ -248,13 +239,13 @@ const initUI = () => {
         height: 3,
         content: `${colors.text.cyan}${colors.bright}Gate Keeper${colors.reset} - Live System Monitor`,
         border: {
-            type: 'line'
+            type: 'line',
         },
         style: {
             border: {
-                fg: 'cyan'
-            }
-        }
+                fg: 'cyan',
+            },
+        },
     });
 
     wsStatusBox = blessed.box({
@@ -263,7 +254,6 @@ const initUI = () => {
         width: 20,
         height: 3,
         content: `${colors.text.yellow}●${colors.reset} Connecting...`,
-        border: false
     });
 
     header.append(wsStatusBox);
@@ -276,14 +266,14 @@ const initUI = () => {
         height: 6,
         label: ' Commit Status ',
         border: {
-            type: 'line'
+            type: 'line',
         },
         style: {
             border: {
-                fg: 'white'
-            }
+                fg: 'white',
+            },
         },
-        content: `${colors.text.yellow}Checking Permission${colors.reset}\n\nAwaiting server verification...`
+        content: `${colors.text.yellow}Checking Permission${colors.reset}\n\nAwaiting server verification...`,
     });
 
     // Log section
@@ -294,21 +284,21 @@ const initUI = () => {
         height: '100%-3',
         label: ' System Feed ',
         border: {
-            type: 'line'
+            type: 'line',
         },
         style: {
             border: {
-                fg: 'white'
-            }
+                fg: 'white',
+            },
         },
         scrollable: true,
         alwaysScroll: true,
         scrollbar: {
             ch: ' ',
             style: {
-                bg: 'blue'
-            }
-        }
+                bg: 'blue',
+            },
+        },
     });
 
     // Status message box at bottom left
@@ -319,13 +309,13 @@ const initUI = () => {
         height: 3,
         content: '',
         border: {
-            type: 'line'
+            type: 'line',
         },
         style: {
             border: {
-                fg: 'white'
-            }
-        }
+                fg: 'white',
+            },
+        },
     });
 
     // Add elements to screen
@@ -337,11 +327,14 @@ const initUI = () => {
     screen.render();
 };
 
+interface TerminalClientOptions {
+    port?: number | string;
+}
+
 /**
  * Starts the terminal client
- * @param {Object} options - Options
  */
-export const startTerminalClient = async (options = {}) => {
+export const startTerminalClient = async (options: TerminalClientOptions = {}): Promise<void> => {
     const port = options.port || process.env.GATE_KEEPER_PORT || 9000;
     const isHttps = process.env.GATE_KEEPER_HTTPS !== 'false';
     const protocol = isHttps ? 'https' : 'http';
@@ -370,10 +363,5 @@ export const startTerminalClient = async (options = {}) => {
 
 // Run if executed directly (skip in test environment)
 if (import.meta.url === `file://${process.argv[1]}` && !(typeof process !== 'undefined' && process.env.VITEST)) {
-    startTerminalClient();
-};
-
-// Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
     startTerminalClient();
 }

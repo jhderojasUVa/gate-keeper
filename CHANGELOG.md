@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Unreleased
+
+### Documentation
+
+* update README and HOW_TO for TypeScript 7 beta (`tsgo`), current CLI usage, and development/test scripts
+
 ## [1.2.0](https://github.com/jhderojasUVa/gate-keeper/compare/v1.1.0...v1.2.0) (2026-04-25)
 
 

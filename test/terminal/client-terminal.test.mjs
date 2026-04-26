@@ -21,7 +21,7 @@ vi.mock('ws', () => ({
 // Mock fetch
 global.fetch = vi.fn();
 
-import { startTerminalClient } from '../../src/terminal/client-terminal.mjs';
+import { startTerminalClient } from '../../src/terminal/client-terminal.ts';
 import * as blessed from 'blessed';
 
 describe('Terminal Client', () => {

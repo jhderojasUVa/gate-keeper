@@ -3,17 +3,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import * as z from 'zod/v4';
-import { STATE } from '../libs/state.mjs';
-import { version } from '../libs/app_utils.mjs';
-import { expressLog } from '../libs/log.mjs';
+import { STATE } from '../libs/state.js';
+import { version } from '../libs/app_utils.js';
+import { expressLog } from '../libs/log.js';
+import type { Request, Response, Express } from 'express';
 
-export const mcp_port = Number(process.env.GATE_KEEPER_MCP_PORT || 9002);
-export const mcp_host = process.env.GATE_KEEPER_MCP_HOST || '127.0.0.1';
+export const mcp_port: number = Number(process.env.GATE_KEEPER_MCP_PORT || 9002);
+export const mcp_host: string = process.env.GATE_KEEPER_MCP_HOST || '127.0.0.1';
 export const mcp_path = '/mcp';
 
 /**
  * Builds the current Gate Keeper status payload for API and MCP consumers.
- * @returns {{canCommit: boolean, inProgress: boolean, scripts: Array<object>, summary: string}} Current status snapshot.
  */
 export const getGateKeeperStatus = () => {
     const status = STATE.getStatus();
@@ -22,15 +22,14 @@ export const getGateKeeperStatus = () => {
         ...status,
         summary: status.inProgress
             ? 'Gate Keeper is still running the configured scripts.'
-            : `Gate Keeper finished running the configured scripts. Commit is ${status.canCommit ? 'allowed' : 'blocked'}.`
+            : `Gate Keeper finished running the configured scripts. Commit is ${status.canCommit ? 'allowed' : 'blocked'}.`,
     };
 };
 
 /**
  * Creates an MCP server instance exposing Gate Keeper tools.
- * @returns {McpServer} Configured MCP server.
  */
-export const createGateKeeperMcpServer = () => {
+export const createGateKeeperMcpServer = (): McpServer => {
     const server = new McpServer({
         name: 'gate-keeper',
         version,
@@ -44,19 +43,19 @@ export const createGateKeeperMcpServer = () => {
             canCommit: z.boolean(),
             inProgress: z.boolean(),
             summary: z.string(),
-            scripts: z.array(z.object({}).passthrough())
-        }
+            scripts: z.array(z.object({}).passthrough()),
+        },
     }, async () => {
         const status = getGateKeeperStatus();
 
         return {
             content: [
                 {
-                    type: 'text',
-                    text: JSON.stringify(status, null, 2)
-                }
+                    type: 'text' as const,
+                    text: JSON.stringify(status, null, 2),
+                },
             ],
-            structuredContent: status
+            structuredContent: status,
         };
     });
 
@@ -65,38 +64,34 @@ export const createGateKeeperMcpServer = () => {
 
 /**
  * Sends a JSON-RPC method not allowed error response.
- * @param {import('express').Response} res - Express response object.
- * @returns {void}
  */
-const methodNotAllowed = (res) => {
+const methodNotAllowed = (res: Response): void => {
     res.status(405).json({
         jsonrpc: '2.0',
         error: {
             code: -32000,
-            message: 'Method not allowed.'
+            message: 'Method not allowed.',
         },
-        id: null
+        id: null,
     });
 };
 
 /**
  * Creates an Express application that serves the MCP endpoint.
- * @param {string} [host=mcp_host] - Host used for MCP host validation.
- * @returns {import('express').Express} Configured MCP Express app.
  */
-export const createMcpApp = (host = mcp_host) => {
+export const createMcpApp = (host: string = mcp_host): Express => {
     const app = createMcpExpressApp({ host });
 
-    app.get('/status', (req, res) => {
+    app.get('/status', (req: Request, res: Response) => {
         res.json(getGateKeeperStatus());
     });
 
-    app.post(mcp_path, async (req, res) => {
+    app.post(mcp_path, async (req: Request, res: Response) => {
         // Create a short-lived MCP server per HTTP request to keep this endpoint stateless.
         const server = createGateKeeperMcpServer();
         const transport = new StreamableHTTPServerTransport({
             // Stateless mode: no long-lived MCP session ids are required.
-            sessionIdGenerator: undefined
+            sessionIdGenerator: undefined,
         });
         let cleanedUp = false;
 
@@ -120,7 +115,7 @@ export const createMcpApp = (host = mcp_host) => {
             expressLog({
                 message: `MCP request handling failed: ${error instanceof Error ? error.message : error}`,
                 kind: 'MCP SERVER',
-                severity: 'ERROR'
+                severity: 'ERROR',
             });
 
             if (!res.headersSent) {
@@ -128,9 +123,9 @@ export const createMcpApp = (host = mcp_host) => {
                     jsonrpc: '2.0',
                     error: {
                         code: -32603,
-                        message: 'Internal server error'
+                        message: 'Internal server error',
                     },
-                    id: null
+                    id: null,
                 });
             }
 
@@ -138,28 +133,25 @@ export const createMcpApp = (host = mcp_host) => {
         }
     });
 
-    app.get(mcp_path, (req, res) => methodNotAllowed(res));
-    app.delete(mcp_path, (req, res) => methodNotAllowed(res));
+    app.get(mcp_path, (req: Request, res: Response) => methodNotAllowed(res));
+    app.delete(mcp_path, (req: Request, res: Response) => methodNotAllowed(res));
 
     return app;
 };
 
 /**
  * Starts the standalone MCP HTTP server.
- * @param {number} [port=mcp_port] - TCP port for the MCP server.
- * @param {string} [host=mcp_host] - Host address for the MCP server.
- * @returns {Promise<import('http').Server>} Started HTTP server instance.
  */
-export const startMcpServer = async (port = mcp_port, host = mcp_host) => {
+export const startMcpServer = async (port: number = mcp_port, host: string = mcp_host): Promise<http.Server> => {
     const app = createMcpApp(host);
     const server = http.createServer(app);
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
         server.listen(port, host, () => {
             expressLog({
                 message: `MCP server started at http://${host}:${port}${mcp_path}`,
                 kind: 'MCP SERVER',
-                severity: 'INFO'
+                severity: 'INFO',
             });
             resolve();
         });

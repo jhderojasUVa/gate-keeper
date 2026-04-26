@@ -13,15 +13,15 @@ vi.mock('ws', () => {
     };
 });
 
-vi.mock('../../src/libs/log.mjs', () => ({
+vi.mock('../../src/libs/log.ts', () => ({
     expressLog: vi.fn()
 }));
 
-vi.mock('../../src/server/server_conf.mjs', () => ({
+vi.mock('../../src/server/server_conf.ts', () => ({
     express_ws_port: 9001
 }));
 
-vi.mock('../../src/libs/state.mjs', () => ({
+vi.mock('../../src/libs/state.ts', () => ({
     STATE: {
         canCommit: true,
         scripts: [],
@@ -39,8 +39,8 @@ describe('WebSocket Server', () => {
 
     beforeEach(async () => {
         vi.clearAllMocks();
-        serverWsModule = await import('../../src/server/server_ws.mjs');
-        expressLog = (await import('../../src/libs/log.mjs')).expressLog;
+        serverWsModule = await import('../../src/server/server_ws.ts');
+        expressLog = (await import('../../src/libs/log.ts')).expressLog;
         serverWsModule.clients.clear();
     });
 

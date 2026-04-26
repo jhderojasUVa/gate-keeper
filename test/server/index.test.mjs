@@ -17,24 +17,24 @@ const {
     isWSL,
     showHelp,
     showVersion
-} = await import('../../src/server/index.mjs');
+} = await import('../../src/server/index.ts');
 
 // Mock all dependencies
-vi.mock('../../src/libs/log.mjs', () => ({
+vi.mock('../../src/libs/log.ts', () => ({
     expressLog: vi.fn()
 }));
 
-vi.mock('../../src/libs/load_config.mjs', () => ({
+vi.mock('../../src/libs/load_config.ts', () => ({
     getConfigurationData: vi.fn(),
     loadPlugins: vi.fn(),
     configFileExists: vi.fn()
 }));
 
-vi.mock('../../src/libs/execute_scripts.mjs', () => ({
+vi.mock('../../src/libs/execute_scripts.ts', () => ({
     executeAllScripts: vi.fn()
 }));
 
-vi.mock('../../src/libs/state.mjs', () => ({
+vi.mock('../../src/libs/state.ts', () => ({
     STATE: {
         setWorking: vi.fn(),
         setResults: vi.fn(),
@@ -49,7 +49,7 @@ vi.mock('../../src/libs/state.mjs', () => ({
     }
 }));
 
-vi.mock('../../src/server/server_conf.mjs', () => ({
+vi.mock('../../src/server/server_conf.ts', () => ({
     express_app: {},
     express_server: {
         listen: vi.fn((port, callback) => callback()),
@@ -60,18 +60,18 @@ vi.mock('../../src/server/server_conf.mjs', () => ({
     isHTTPS: true
 }));
 
-vi.mock('../../src/server/server_ws.mjs', () => ({
+vi.mock('../../src/server/server_ws.ts', () => ({
     startWebSocket: vi.fn(),
     broadcast: vi.fn()
 }));
 
-vi.mock('../../src/server/mcp_server.mjs', () => ({
+vi.mock('../../src/server/mcp_server.ts', () => ({
     startMcpServer: vi.fn().mockResolvedValue({ close: vi.fn() }),
     mcp_port: 9002
 }));
 
 // Mock the terminal client
-vi.mock('../../src/terminal/client-terminal.mjs', () => ({
+vi.mock('../../src/terminal/client-terminal.ts', () => ({
     startTerminalClient: vi.fn().mockResolvedValue()
 }));
 
@@ -104,12 +104,12 @@ describe('Server Index', () => {
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));
         
         // Import mocked modules
-        const log = await import('../../src/libs/log.mjs');
-        const loadConfig = await import('../../src/libs/load_config.mjs');
-        const executeScripts = await import('../../src/libs/execute_scripts.mjs');
-        const state = await import('../../src/libs/state.mjs');
-        const serverWs = await import('../../src/server/server_ws.mjs');
-        const mcpServer = await import('../../src/server/mcp_server.mjs');
+        const log = await import('../../src/libs/log.ts');
+        const loadConfig = await import('../../src/libs/load_config.ts');
+        const executeScripts = await import('../../src/libs/execute_scripts.ts');
+        const state = await import('../../src/libs/state.ts');
+        const serverWs = await import('../../src/server/server_ws.ts');
+        const mcpServer = await import('../../src/server/mcp_server.ts');
         
         // Get mocked functions
         expressLog = vi.mocked(log.expressLog);

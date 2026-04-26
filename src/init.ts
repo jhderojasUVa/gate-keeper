@@ -3,11 +3,11 @@
 // Gate-keeper initialization tool
 import fs from 'fs';
 import path from 'path';
-import { __dirname } from './libs/app_utils.mjs';
+import { __dirname } from './libs/app_utils.js';
 // Libs
-import { configFileExists } from './libs/load_config.mjs';
+import { configFileExists } from './libs/load_config.js';
 // Extras
-import { CONFIGURATION_FILE, DEFAULT_CONFIGURATION_FILE } from './models/configuration.model.mjs';
+import { CONFIGURATION_FILE, DEFAULT_CONFIGURATION_FILE } from './models/configuration.model.js';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 
@@ -17,7 +17,7 @@ const currentFilePath = fileURLToPath(currentFileUrl);
 const isMainModule = process.argv[1].includes('gate-keeper-init') || process.argv[1] === currentFilePath;
 
 // Ensure stdout is flushed immediately
-const log = (msg) => {
+const log = (msg: string): void => {
     console.log(msg);
     fs.writeSync(1, '');
 };
@@ -25,7 +25,7 @@ const log = (msg) => {
 /**
  * Shows help information
  */
-export const showHelp = () => {
+export const showHelp = (): void => {
     log(`
 Gate Keeper Init - Configuration Setup
 
@@ -53,20 +53,16 @@ For more information, see: https://github.com/jhderojasUVa/gate-keeper
 /**
  * Shows version information
  */
-export const showVersion = () => {
-    console.log(')))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))')
+export const showVersion = (): void => {
     try {
-        console.log('A')
         // Get the directory of the current module
         const currentDir = path.dirname(fileURLToPath(import.meta.url));
         const packageJsonPath = path.resolve(currentDir, '../../package.json');
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string };
 
-        console.log("Got here")
         log(`Gate Keeper v${packageJson.version}`);
         process.exit(0);
     } catch (error) {
-        console.log('B')
         console.error('Failed to read package.json:', error);
         log('Gate Keeper (version unknown)');
     }
@@ -76,7 +72,7 @@ export const showVersion = () => {
  * Initializes the Gate Keeper by checking for and creating the configuration file if it doesn't exist.
  * @returns {boolean} True if the configuration file was created, false if it already exists.
  */
-export const initGateKepper = () => {
+export const initGateKepper = (): boolean => {
     try {
         log('🚀 Initializing Gate Keeper...');
         log('📋 Checking if configuration file is present...');
@@ -90,7 +86,7 @@ export const initGateKepper = () => {
                 log('   You can now customize it to add your own scripts.');
                 return true;
             } catch (error) {
-                log(`❌ Error creating configuration file: ${error.message}`);
+                log(`❌ Error creating configuration file: ${(error as Error).message}`);
                 process.exit(1);
             }
         } else {
@@ -99,16 +95,15 @@ export const initGateKepper = () => {
             return false;
         }
     } catch (error) {
-        log(`❌ Error during initialization: ${error.message}`);
-        if (error.stack) {
-            console.error(error.stack);
+        log(`❌ Error during initialization: ${(error as Error).message}`);
+        if ((error as NodeJS.ErrnoException).stack) {
+            console.error((error as Error).stack);
         }
         process.exit(1);
     }
 };
 
 // Execute if run directly (not imported as a module)
-// Check if running as main - works for both direct execution and npm-linked commands
 if (isMainModule) {
     const args = process.argv.slice(2);
 
@@ -126,7 +121,7 @@ if (isMainModule) {
 
     // Check for invalid arguments
     const validArgs = ['--open'];
-    const invalidArgs = args.filter(arg => !validArgs.includes(arg));
+    const invalidArgs = args.filter((arg) => !validArgs.includes(arg));
     if (invalidArgs.length > 0) {
         log(`❌ Unknown argument(s): ${invalidArgs.join(', ')}`);
         log('   Use --help for usage information.');
@@ -141,7 +136,7 @@ if (isMainModule) {
             const port = process.env.GATE_KEEPER_PORT || 9000;
             const url = `${protocol}://localhost:${port}`;
             log(`🌐 Opening browser to ${url}...`);
-            let command;
+            let command: string;
             if (process.platform === 'darwin') {
                 command = `open "${url}"`;
             } else if (process.platform === 'win32') {
@@ -158,9 +153,9 @@ if (isMainModule) {
 
         log('\n✨ Gate Keeper is now ready! Run "gate-keeper" to start.');
     } catch (error) {
-        log(`❌ Fatal error: ${error.message}`);
-        if (error.stack) {
-            console.error(error.stack);
+        log(`❌ Fatal error: ${(error as Error).message}`);
+        if ((error as Error).stack) {
+            console.error((error as Error).stack);
         }
         process.exit(1);
     }

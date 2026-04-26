@@ -3,7 +3,7 @@ import {
     DEFAULT_CONFIGURATION_FILE,
     SCRIPT_MODEL,
     GATE_KEEPER_CONFIG_MODEL
-} from '../../src/models/configuration.model.mjs';
+} from '../../src/models/configuration.model.ts';
 
 describe('Configuration Model', () => {
     it('should have correct default configuration file names', () => {

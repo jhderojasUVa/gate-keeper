@@ -1,16 +1,22 @@
 // Logging library
 import fs from 'fs';
-import { colors } from './colors.mjs';
+import { colors } from './colors.js';
 
 // Check if you want to log on disk
 const logOnDisk = process.env.GATE_KEEPER_LOG_ON_DISK || false;
+
+interface LogOptions {
+    message?: string;
+    severity?: string;
+    kind?: string;
+}
 
 // Express standard log info
 export const expressLog = ({
     message = undefined,
     severity = 'INFO',
     kind = undefined,
-} = {}) => {
+}: LogOptions = {}): void => {
     // Change the color by severity
     switch (severity.toUpperCase()) {
         case 'WARNING':

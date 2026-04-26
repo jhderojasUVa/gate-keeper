@@ -1,4 +1,4 @@
-import { STATE } from '../../src/libs/state.mjs';
+import { STATE } from '../../src/libs/state.ts';
 
 describe('State Management', () => {
     beforeEach(() => {

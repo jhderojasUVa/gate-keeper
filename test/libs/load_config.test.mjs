@@ -1,4 +1,4 @@
-import { configFileExists, getConfigurationData, loadPlugins } from '../../src/libs/load_config.mjs';
+import { configFileExists, getConfigurationData, loadPlugins } from '../../src/libs/load_config.ts';
 import fs from 'fs';
 import { vi } from 'vitest';
 
@@ -13,12 +13,12 @@ vi.mock('fs', () => ({
 }));
 
 // Mock app_utils
-vi.mock('../../src/libs/app_utils.mjs', () => ({
+vi.mock('../../src/libs/app_utils.ts', () => ({
     __dirname: '/mock/dir'
 }));
 
 // Mock configuration model
-vi.mock('../../src/models/configuration.model.mjs', () => ({
+vi.mock('../../src/models/configuration.model.ts', () => ({
     CONFIGURATION_FILE: '/path/to/config.json',
     DEFAULT_CONFIGURATION_FILE: 'default.gate-keeper.conf.json'
 }));

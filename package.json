@@ -2,13 +2,15 @@
     "name": "@jhderojasUVa/gate-keeper",
     "version": "1.2.0",
     "description": "First line of defense of your trunk development",
-    "main": "./src/index.js",
+    "main": "./dist/index.js",
     "type": "module",
     "scripts": {
+        "build": "tsgo --build",
+        "typecheck": "tsgo --noEmit",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "test": "npm run test:unit",
-        "test:unit": "vitest run --coverage",
+        "test:unit": "vitest run --coverage --exclude test/server/mcp_server.test.mjs && vitest run test/server/mcp_server.test.mjs",
         "prepare": "husky install",
         "cz": "cz",
         "release": "standard-version",
@@ -17,8 +19,8 @@
         "release:major": "standard-version --release-as major"
     },
     "bin": {
-        "gate-keeper": "./src/server/index.mjs",
-        "gate-keeper-init": "./src/init.mjs"
+        "gate-keeper": "./dist/server/index.js",
+        "gate-keeper-init": "./dist/init.js"
     },
     "publishConfig": {
         "registry": "https://npm.pkg.github.com/"
@@ -45,6 +47,11 @@
         "@commitlint/config-conventional": "19.2.2",
         "@eslint/js": "^9.5.0",
         "@stylistic/eslint-plugin-js": "^2.3.0",
+        "@types/blessed": "^0.1.25",
+        "@types/express": "^4.17.21",
+        "@types/node": "^24.0.0",
+        "@types/ws": "^8.5.10",
+        "@typescript/native-preview": "beta",
         "@vitest/coverage-v8": "^1.6.0",
         "cz-conventional-changelog": "^3.3.0",
         "eslint": "^9.5.0",
@@ -53,6 +60,7 @@
         "husky": "^8.0.0",
         "standard-version": "^9.5.0",
         "supertest": "^7.2.2",
+        "typescript": "npm:@typescript/typescript6@latest",
         "vitest": "^1.6.0"
     },
     "dependencies": {

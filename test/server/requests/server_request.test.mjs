@@ -1,4 +1,4 @@
-import { welcomeMessage } from '../../../src/server/requests/server_request.mjs';
+import { welcomeMessage } from '../../../src/server/requests/server_request.ts';
 
 describe('Server Request', () => {
     it('should have the correct welcomeMessage structure', () => {

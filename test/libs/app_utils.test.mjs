@@ -1,4 +1,4 @@
-import { __dirname, version } from '../../src/libs/app_utils.mjs';
+import { __dirname, version } from '../../src/libs/app_utils.ts';
 import path from 'path';
 
 describe('App Utils', () => {

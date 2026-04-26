@@ -4,7 +4,7 @@ The Gate Keeper is a tool that runs in the background to check your code quality
 
 ## Prerequisites
 
-- Node.js (version 14 or higher)
+- Node.js (version 20 or higher recommended)
 - npm or yarn
 
 ## Installation
@@ -50,23 +50,33 @@ The Gate Keeper is a tool that runs in the background to check your code quality
 
 Start the Gate Keeper server:
 ```bash
-npx gate-keeper
+npx gate-keeper server
 ```
 
 The server will start and display the URL where you can access the web interface (default: https://localhost:9000).
 
 ### Command Line Options
 
+- `server`: Start the Gate Keeper server
+- `client`: Open the graphical client in your browser
+- `client-terminal`: Open the terminal client
 - `--help`, `-h`: Show help information
-- `--version`, `-v`: Show version information  
-- `--open`: Open browser to the web interface after starting
+- `--version`, `-v`: Show version information
+- `--open`: Open browser to the web interface after starting (server mode)
 
 Examples:
 ```bash
-npx gate-keeper                    # Start the server
-npx gate-keeper --open            # Start and open browser
+npx gate-keeper server            # Start the server
+npx gate-keeper server --open     # Start and open browser
+npx gate-keeper client            # Open graphical client
+npx gate-keeper client-terminal   # Open terminal client
 npx gate-keeper --help            # Show help
 npx gate-keeper --version         # Show version
+```
+
+Initialize configuration:
+```bash
+npx gate-keeper-init
 ```
 
 ## Environment Variables
@@ -75,6 +85,8 @@ You can configure the server using environment variables:
 
 - `GATE_KEEPER_PORT`: HTTP/HTTPS port (default: 9000)
 - `GATE_KEEPER_WS_PORT`: WebSocket port (default: 9001)
+- `GATE_KEEPER_MCP_PORT`: MCP port (default: 9002)
+- `GATE_KEEPER_MCP_HOST`: MCP host (default: 127.0.0.1)
 - `GATE_KEEPER_HTTPS`: Enable HTTPS (default: true)
 
 Example:
@@ -94,6 +106,18 @@ Once running, open your browser to the displayed URL to:
 The Gate Keeper is designed to integrate with Git hooks (via Husky) to automatically run checks before commits. Configure your Git hooks as needed for pre-commit validation.
 
 ## Development
+
+This project uses TypeScript 7 beta through `@typescript/native-preview` and `tsgo`.
+
+Build:
+```bash
+npm run build
+```
+
+Type-check:
+```bash
+npm run typecheck
+```
 
 For development purposes, you can run tests:
 ```bash

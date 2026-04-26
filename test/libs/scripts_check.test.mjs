@@ -1,4 +1,4 @@
-import { canCommit } from '../../src/libs/scripts_check.mjs';
+import { canCommit } from '../../src/libs/scripts_check.ts';
 
 describe('Scripts Check', () => {
     it('should return true when all scripts pass', () => {

@@ -18,13 +18,13 @@ vi.mock('util', async (importOriginal) => {
         })
     };
 });
-vi.mock('../../src/libs/log.mjs');
+vi.mock('../../src/libs/log.ts');
 
 describe('Execute Scripts', () => {
     let executeScriptsModule;
 
     beforeEach(async () => {
-        executeScriptsModule = await import('../../src/libs/execute_scripts.mjs');
+        executeScriptsModule = await import('../../src/libs/execute_scripts.ts');
     });
 
     it('should export executeScript function', () => {
@@ -41,7 +41,7 @@ describe('Execute Scripts', () => {
     });
 
     it('should handle invalid configuration array', async () => {
-        const { expressLog } = await import('../../src/libs/log.mjs');
+        const { expressLog } = await import('../../src/libs/log.ts');
         const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {});
 
         try {

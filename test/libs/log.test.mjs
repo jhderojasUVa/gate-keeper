@@ -1,8 +1,8 @@
-import { expressLog } from '../../src/libs/log.mjs';
+import { expressLog } from '../../src/libs/log.ts';
 import { vi } from 'vitest';
 
 // Mock colors
-vi.mock('../../src/libs/colors.mjs', () => ({
+vi.mock('../../src/libs/colors.ts', () => ({
     colors: {
         text: {
             yellow: '',

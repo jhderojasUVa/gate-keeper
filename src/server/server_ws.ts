@@ -1,33 +1,31 @@
 // Websocket server configuration
 import WebSocket, { WebSocketServer } from 'ws';
-import { expressLog } from '../libs/log.mjs';
-import { express_ws_port } from './server_conf.mjs';
+import { expressLog } from '../libs/log.js';
+import { express_ws_port } from './server_conf.js';
 // Messages
-import * as WebSocketResponses from './responses/server_responses.mjs';
-import { WSResponse } from './response.interface.mjs';
+import * as WebSocketResponses from './responses/server_responses.js';
+import { WSResponse } from './response.interface.js';
 // Constants
-import { TYPES_MESSAGES } from '../models/wsServerRequest.model.mjs';
+import { TYPES_MESSAGES } from '../models/wsServerRequest.model.js';
 // State machine
-import { STATE as GATE_KEEPER_STATE } from '../libs/state.mjs';
+import { STATE as GATE_KEEPER_STATE } from '../libs/state.js';
 
 // Keep track of connected clients
-export const clients = new Set();
+export const clients: Set<WebSocket> = new Set();
 
 /**
  * Broadcasts a payload to all currently connected WebSocket clients.
- * @param {object} message - JSON-serializable message to send.
- * @returns {void}
  */
-export const broadcast = (message) => {
+export const broadcast = (message: unknown): void => {
     const messageStr = JSON.stringify(message);
-    clients.forEach(client => {
+    clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(messageStr, (error) => {
                 if (error) {
                     expressLog({
                         message: 'Error broadcasting message: ' + error,
                         kind: 'WEB SOCKET',
-                        severity: 'ERROR'
+                        severity: 'ERROR',
                     });
                 }
             });
@@ -37,22 +35,19 @@ export const broadcast = (message) => {
 
 /**
  * Starts the Gate Keeper WebSocket server and registers socket handlers.
- * @returns {void}
  */
-export const startWebSocket = () => {
+export const startWebSocket = (): void => {
     const wss = new WebSocketServer({
         port: express_ws_port,
-        concurrencyLimit: 2,
-        threshold: 1024
     });
 
     expressLog({
-        message: `Websocket server started at ${process.env.GATE_KEEPER_HTTPS === 'false' ? 'ws': 'wss'}://localhost:${express_ws_port}`,
+        message: `Websocket server started at ${process.env.GATE_KEEPER_HTTPS === 'false' ? 'ws' : 'wss'}://localhost:${express_ws_port}`,
         kind: 'WEB SOCKET',
     });
 
     // Server events
-    wss.on('connection', (ws) => {
+    wss.on('connection', (ws: WebSocket) => {
         // Add client to the set
         clients.add(ws);
 
@@ -67,37 +62,36 @@ export const startWebSocket = () => {
                 expressLog({
                     message: 'Error on client connection' + error,
                     kind: 'WEB SOCKET',
-                    severity: 'INFO'
+                    severity: 'INFO',
                 });
             }
         });
 
         // Send current status after connection
-        // New clients immediately receive the latest server status snapshot.
         const currentStatus = {
             type: TYPES_MESSAGES.STATUS_UPDATE,
             data: GATE_KEEPER_STATE.getStatus(),
-            success: true
+            success: true,
         };
         ws.send(WSResponse(currentStatus), (error) => {
             if (error) {
                 expressLog({
                     message: 'Error sending current status: ' + error,
                     kind: 'WEB SOCKET',
-                    severity: 'ERROR'
+                    severity: 'ERROR',
                 });
             }
         });
 
         // Socket events
-        ws.on('message', (rawMessage) => {
+        ws.on('message', (rawMessage: Buffer | string) => {
             expressLog({
                 message: `Message received: ${rawMessage}`,
                 kind: 'WEB SOCKET',
                 severity: 'INFO',
             });
 
-            const message = JSON.parse(rawMessage);
+            const message = JSON.parse(rawMessage.toString()) as { type: string };
 
             // Check message if is for running things again
             switch (message.type.toUpperCase()) {
@@ -139,7 +133,7 @@ export const startWebSocket = () => {
             }
         });
 
-        ws.on('error', (error) => {
+        ws.on('error', (error: Error) => {
             expressLog({
                 message: `An error has happened!\n${error}`,
                 kind: 'WEB SOCKET',
@@ -165,6 +159,4 @@ export const startWebSocket = () => {
             });
         });
     });
-
-
 };
