@@ -1,4 +1,4 @@
-import { __dirname, version } from '../../src/libs/app_utils.ts';
+import { __dirname, version, appReleasePreferences, betaStartupRibbonLines } from '../../src/libs/app_utils.ts';
 import path from 'path';
 
 describe('App Utils', () => {
@@ -11,8 +11,14 @@ describe('App Utils', () => {
     it('should export version from package.json', () => {
         expect(version).toBeDefined();
         expect(typeof version).toBe('string');
-        // Version should be in semver format (basic check)
-        expect(version).toMatch(/^\d+\.\d+\.\d+/);
+        expect(version).toMatch(/^\d+\.\d+\.\d+-beta\.\d+$/);
+    });
+
+    it('should derive beta startup preferences from the package version', () => {
+        expect(appReleasePreferences.version).toBe(version);
+        expect(appReleasePreferences.releaseChannel).toBe('beta');
+        expect(appReleasePreferences.showBetaStartupRibbon).toBe(true);
+        expect(betaStartupRibbonLines).toContain(`🧪 Gate Keeper BETA build detected (v${version})`);
     });
 
     it('__dirname should point to libs directory', () => {

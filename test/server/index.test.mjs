@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-const readFileSyncMock = vi.hoisted(() => vi.fn().mockReturnValue(JSON.stringify({ version: '1.0.0' })));
+const readFileSyncMock = vi.hoisted(() => vi.fn().mockReturnValue(JSON.stringify({ version: '1.2.0-beta.0' })));
 
 // Mock process before importing anything
 vi.stubGlobal('process', {
@@ -101,7 +101,7 @@ describe('Server Index', () => {
         process.argv = ['node', 'vitest'];
         
         // Mock fs.readFileSync for showVersion
-        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.0.0' }));
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({ version: '1.2.0-beta.0' }));
         
         // Import mocked modules
         const log = await import('../../src/libs/log.ts');
@@ -147,6 +147,17 @@ describe('Server Index', () => {
         });
         expect(startMcpServer).toHaveBeenCalled();
         expect(startWebSocket).toHaveBeenCalledWith(9001);
+    });
+
+    it('should log the beta startup ribbon for beta builds', async () => {
+        const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await startGateKeeper();
+
+        expect(consoleLogMock).toHaveBeenCalledWith('🧪 ==================================================');
+        expect(consoleLogMock).toHaveBeenCalledWith('🧪 Gate Keeper BETA build detected (v1.2.0-beta.0)');
+
+        consoleLogMock.mockRestore();
     });
 
     it('should execute scripts and broadcast results', async () => {
@@ -217,13 +228,12 @@ describe('Server Index', () => {
         expect(typeof isWSL()).toBe('boolean');
     });
 
-    it.skip('should output version info with showVersion', () => {
-
+    it('should output version info with showVersion', () => {
         const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         showVersion();
 
-        expect(consoleLogMock).toHaveBeenCalledWith('Gate Keeper v1.0.0');
+        expect(consoleLogMock).toHaveBeenCalledWith('Gate Keeper v1.2.0-beta.0');
 
         consoleLogMock.mockRestore();
     });

@@ -1,6 +1,6 @@
 {
     "name": "@jhderojasUVa/gate-keeper",
-    "version": "1.2.0",
+    "version": "1.2.0-beta.0",
     "description": "First line of defense of your trunk development",
     "main": "./dist/index.js",
     "type": "module",

@@ -1,3 +1,5 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 
 vi.mock('../src/libs/load_config.ts', () => ({
@@ -77,12 +79,16 @@ describe('gate-keeper-init', () => {
     it('showVersion prints version when package.json exists', async () => {
         const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
         fs.default.readFileSync.mockReturnValue(JSON.stringify({ version: '9.0.0' }));
+        const expectedPackageJsonPath = path.resolve(
+            path.dirname(fileURLToPath(new URL('../src/init.ts', import.meta.url))),
+            '../package.json',
+        );
 
         const { showVersion } = await import('../src/init.ts');
         showVersion();
 
         expect(fs.default.readFileSync).toHaveBeenCalledWith(
-            '/mnt/c/Projects/gate-keeper/package.json',
+            expectedPackageJsonPath,
             'utf8',
         );
         expect(consoleLogSpy).toHaveBeenCalledWith('Gate Keeper v9.0.0');

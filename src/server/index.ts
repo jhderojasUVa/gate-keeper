@@ -3,7 +3,7 @@
 // Gate Keeper Server Entry Point
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import path from 'path';
+import { betaStartupRibbonLines, version } from '../libs/app_utils.js';
 
 // Import message types
 import { TYPES_MESSAGES } from '../models/wsServerRequest.model.js';
@@ -136,15 +136,7 @@ export const openClient = async (): Promise<void> => {
  * Shows version information
  */
 export const showVersion = (): void => {
-    try {
-        const currentDir = path.dirname(fileURLToPath(import.meta.url));
-        const packageJsonPath = path.resolve(currentDir, '../../package.json');
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string };
-        log(`Gate Keeper v${packageJson.version}`);
-    } catch (error) {
-        console.error('Failed to read package.json:', error);
-        log('Gate Keeper (version unknown)');
-    }
+    log(`Gate Keeper v${version}`);
 };
 
 /**
@@ -153,6 +145,7 @@ export const showVersion = (): void => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const startGateKeeper = async (): Promise<void> => {
     try {
+        betaStartupRibbonLines.forEach(log);
         log('🚀 Starting Gate Keeper server...');
 
         // Use dynamic imports to avoid loading modules when just showing help
