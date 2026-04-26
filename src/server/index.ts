@@ -121,14 +121,14 @@ export const openClient = async (): Promise<void> => {
             if (error) {
                 log(`❌ Failed to open browser: ${error.message}`);
                 log(`   You can manually open: ${url}`);
-                exitWithCode(1);
+                return exitWithCode(1);
             } else {
                 log(`✅ Graphical client opened in your browser!`);
             }
         });
     } catch (error) {
         log(`❌ Error opening graphical client: ${(error as Error).message}`);
-        exitWithCode(1);
+        return exitWithCode(1);
     }
 };
 
@@ -181,7 +181,7 @@ export const startGateKeeper = async (): Promise<void> => {
             if ((importError as Error).stack) {
                 console.error((importError as Error).stack);
             }
-            exitWithCode(1);
+            return exitWithCode(1);
         }
 
         // Check configuration
@@ -227,7 +227,7 @@ export const startGateKeeper = async (): Promise<void> => {
         if (GATE_KEEPER_PLUGINS.error) {
             log(`❌ Configuration error: ${GATE_KEEPER_PLUGINS.data}`);
             log('   Please check your gate-keeper.conf.json file.');
-            exitWithCode(1);
+            return exitWithCode(1);
         }
 
         log(`📜 Loaded ${GATE_KEEPER_PLUGINS.length} script(s) to execute.`);
@@ -280,29 +280,29 @@ export const startGateKeeper = async (): Promise<void> => {
             console.error((error as Error).stack);
         }
         log('   Make sure you have run "npm install" in the gate-keeper project directory.');
-        exitWithCode(1);
+        return exitWithCode(1);
     }
 };
 
-// Execute if run directly (not imported as a module)
-if (isMainModule) {
-    const args = process.argv.slice(2);
-
+/**
+ * Routes Gate Keeper CLI commands.
+ */
+export const handleCli = async (args: string[] = process.argv.slice(2)): Promise<void> => {
     if (args.includes('--help') || args.includes('-h')) {
         showHelp();
-        exitWithCode(0);
+        return exitWithCode(0);
     }
 
     if (args.includes('--version') || args.includes('-v')) {
         showVersion();
-        exitWithCode(0);
+        return exitWithCode(0);
     }
 
     if (args.length === 0) {
         log(`❌ Missing required command`);
         log('');
         showHelp();
-        exitWithCode(1);
+        return exitWithCode(1);
     }
 
     let mode: string | null = null;
@@ -321,7 +321,7 @@ if (isMainModule) {
         log(`❌ Unknown command: ${args[0]}`);
         log('');
         showHelp();
-        exitWithCode(1);
+        return exitWithCode(1);
     }
 
     const options = [
@@ -331,70 +331,68 @@ if (isMainModule) {
 
     const openBrowser = options.includes('--open');
 
-    let validOptions: string[] = [];
-    if (mode === 'server') {
-        validOptions = ['--open'];
-    }
+    const validOptions = ['--open'];
 
     const invalidArgs = options.filter((arg) => !validOptions.includes(arg));
     if (invalidArgs.length > 0) {
         log(`❌ Unknown argument(s): ${invalidArgs.join(', ')}`);
         log('   Use --help for usage information.');
-        exitWithCode(1);
+        return exitWithCode(1);
     }
 
     if (mode === 'client') {
         if (openBrowser) {
             log('⚠️  --open flag ignored in client mode');
         }
-        openClient();
+        await openClient();
     } else if (mode === 'client-terminal') {
         if (openBrowser) {
             log('⚠️  --open flag ignored in client-terminal mode');
         }
-        (async () => {
-            try {
-                const { startTerminalClient } = await import('../terminal/client-terminal.js');
-                await startTerminalClient();
-            } catch (error) {
-                console.error('Failed to start terminal client:', error);
-                exitWithCode(1);
-            }
-        })();
+        try {
+            const { startTerminalClient } = await import('../terminal/client-terminal.js');
+            await startTerminalClient();
+        } catch (error) {
+            console.error('Failed to start terminal client:', error);
+            return exitWithCode(1);
+        }
     } else {
-        (async () => {
-            try {
-                await startGateKeeper();
-                if (openBrowser) {
-                    const { exec } = await import('child_process');
-                    const { isHTTPS, express_port } = await import('./server_conf.js');
-                    const protocol = isHTTPS ? 'https' : 'http';
-                    const url = `${protocol}://localhost:${express_port}`;
-                    log(`🌐 Opening browser to ${url}...`);
-                    let command: string;
-                    if (process.platform === 'darwin') {
-                        command = `open "${url}"`;
-                    } else if (process.platform === 'win32') {
-                        command = `start "${url}"`;
-                    } else if (isWSL()) {
-                        log('   (Running in WSL, opening host browser...)');
-                        command = `powershell.exe -Command "Start-Process '${url}'"`;
-                    } else {
-                        command = `xdg-open "${url}"`;
+        try {
+            await startGateKeeper();
+            if (openBrowser) {
+                const { exec } = await import('child_process');
+                const { isHTTPS, express_port } = await import('./server_conf.js');
+                const protocol = isHTTPS ? 'https' : 'http';
+                const url = `${protocol}://localhost:${express_port}`;
+                log(`🌐 Opening browser to ${url}...`);
+                let command: string;
+                if (process.platform === 'darwin') {
+                    command = `open "${url}"`;
+                } else if (process.platform === 'win32') {
+                    command = `start "${url}"`;
+                } else if (isWSL()) {
+                    log('   (Running in WSL, opening host browser...)');
+                    command = `powershell.exe -Command "Start-Process '${url}'"`;
+                } else {
+                    command = `xdg-open "${url}"`;
+                }
+                exec(command, (error) => {
+                    if (error) {
+                        log(`Failed to open browser: ${error.message}`);
                     }
-                    exec(command, (error) => {
-                        if (error) {
-                            log(`Failed to open browser: ${error.message}`);
-                        }
-                    });
-                }
-            } catch (error) {
-                log(`❌ Fatal error: ${(error as Error).message}`);
-                if ((error as Error).stack) {
-                    console.error((error as Error).stack);
-                }
-                exitWithCode(1);
+                });
             }
-        })();
+        } catch (error) {
+            log(`❌ Fatal error: ${(error as Error).message}`);
+            if ((error as Error).stack) {
+                console.error((error as Error).stack);
+            }
+            return exitWithCode(1);
+        }
     }
+};
+
+// Execute if run directly (not imported as a module)
+if (isMainModule) {
+    void handleCli();
 }

@@ -148,8 +148,11 @@ export const startMcpServer = async (port: number = mcp_port, host: string = mcp
 
     await new Promise<void>((resolve, reject) => {
         server.listen(port, host, () => {
+            const address = server.address();
+            const boundPort = typeof address === 'object' && address !== null ? address.port : port;
+
             expressLog({
-                message: `MCP server started at http://${host}:${port}${mcp_path}`,
+                message: `MCP server started at http://${host}:${boundPort}${mcp_path}`,
                 kind: 'MCP SERVER',
                 severity: 'INFO',
             });
