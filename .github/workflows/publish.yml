@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Setup Node
+      - name: Setup Node (GitHub Packages)
         uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -89,7 +89,7 @@ jobs:
         if: steps.detect.outputs.release_type != 'none'
         run: npm run release:${{ steps.detect.outputs.release_type }}
 
-      - name: Publish and push release
+      - name: Publish to GitHub Packages
         if: steps.detect.outputs.release_type != 'none'
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
@@ -101,8 +101,26 @@ jobs:
           if [ "${GITHUB_REPOSITORY}" = "jhderojasUVa/gate-keeper" ]; then
             npm publish
           fi
+
+      - name: Setup Node (npm registry)
+        if: steps.detect.outputs.release_type != 'none'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish to npm
+        if: steps.detect.outputs.release_type != 'none'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          npm publish --access public
           
-          # Configure git and push atomically with publish
+      - name: Push release commit and tags
+        if: steps.detect.outputs.release_type != 'none'
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git push origin main --follow-tags
