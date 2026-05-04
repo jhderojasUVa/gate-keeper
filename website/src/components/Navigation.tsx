@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Navigation.css';
 
-function Navigation() {
-  const [scrolled, setScrolled] = useState(false);
+function Navigation(): JSX.Element {
+  const [scrolled, setScrolled] = useState<boolean>(false);
 
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (): void => {
       setScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);

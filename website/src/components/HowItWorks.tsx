@@ -1,8 +1,15 @@
 import React from 'react';
 import './HowItWorks.css';
 
-function HowItWorks() {
-  const steps = [
+interface Step {
+  number: string;
+  title: string;
+  description: string;
+  code: string;
+}
+
+function HowItWorks(): JSX.Element {
+  const steps: Step[] = [
     {
       number: '01',
       title: 'Install & Initialize',
@@ -38,7 +45,7 @@ function HowItWorks() {
         </p>
       </div>
       <div className="steps-container">
-        {steps.map((step, index) => (
+        {steps.map((step: Step, index: number) => (
           <div key={index} className="step-card">
             <div className="step-number">{step.number}</div>
             <div className="step-content">

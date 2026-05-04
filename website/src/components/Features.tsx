@@ -1,8 +1,15 @@
 import React from 'react';
 import './Features.css';
 
-function Features() {
-  const features = [
+interface Feature {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+}
+
+function Features(): JSX.Element {
+  const features: Feature[] = [
     {
       icon: '⚡',
       title: 'Real-Time Validation',
@@ -50,8 +57,8 @@ function Features() {
         </p>
       </div>
       <div className="features-grid">
-        {features.map((feature, index) => (
-          <div key={index} className="feature-card card" style={{'--accent-color': feature.color}}>
+        {features.map((feature: Feature, index: number) => (
+          <div key={index} className="feature-card card" style={{'--accent-color': feature.color} as React.CSSProperties}>
             <div className="feature-icon">{feature.icon}</div>
             <h3 className="feature-title">{feature.title}</h3>
             <p className="feature-description">{feature.description}</p>

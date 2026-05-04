@@ -1,8 +1,8 @@
 import React from 'react';
 import './Footer.css';
 
-function Footer() {
-  const currentYear = new Date().getFullYear();
+function Footer(): JSX.Element {
+  const currentYear: number = new Date().getFullYear();
 
   return (
     <footer className="footer">

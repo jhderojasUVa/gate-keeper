@@ -1,8 +1,22 @@
 import React from 'react';
 import './UseCases.css';
 
-function UseCases() {
-  const useCases = [
+interface UseCase {
+  icon: string;
+  title: string;
+  subtitle: string;
+  benefits: string[];
+  gradient: string;
+}
+
+interface Advantage {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+function UseCases(): JSX.Element {
+  const useCases: UseCase[] = [
     {
       icon: '👥',
       title: 'Small Teams',
@@ -50,7 +64,7 @@ function UseCases() {
         </p>
       </div>
       <div className="use-cases-grid">
-        {useCases.map((useCase, index) => (
+        {useCases.map((useCase: UseCase, index: number) => (
           <div key={index} className="use-case-card card">
             <div className="use-case-header" style={{background: useCase.gradient}}>
               <div className="use-case-icon">{useCase.icon}</div>
@@ -59,7 +73,7 @@ function UseCases() {
               <h3 className="use-case-title">{useCase.title}</h3>
               <p className="use-case-subtitle">{useCase.subtitle}</p>
               <ul className="benefits-list">
-                {useCase.benefits.map((benefit, idx) => (
+                {useCase.benefits.map((benefit: string, idx: number) => (
                   <li key={idx} className="benefit-item">
                     <span className="benefit-icon">✓</span>
                     <span>{benefit}</span>

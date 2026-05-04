@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
 import './Installation.css';
 
-function Installation() {
-  const [copiedIndex, setCopiedIndex] = useState(null);
+interface InstallStep {
+  title: string;
+  command: string;
+  description: string;
+}
 
-  const copyToClipboard = (text, index) => {
+interface Command {
+  title: string;
+  command: string;
+  description: string;
+}
+
+function Installation(): JSX.Element {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const copyToClipboard = (text: string, index: number): void => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const installSteps = [
+  const installSteps: InstallStep[] = [
     {
       title: 'Install via npm',
       command: 'npm install @jhderojasUVa/gate-keeper --save-dev',
@@ -66,7 +78,7 @@ function Installation() {
       </div>
 
       <div className="installation-steps">
-        {installSteps.map((step, index) => (
+        {installSteps.map((step: InstallStep, index: number) => (
           <div key={index} className="install-step">
             <div className="install-step-header">
               <span className="install-step-number">{index + 1}</span>
@@ -89,7 +101,7 @@ function Installation() {
       <div className="commands-section">
         <h3 className="commands-title">Available Commands</h3>
         <div className="commands-grid">
-          {commands.map((cmd, index) => (
+          {commands.map((cmd: Command, index: number) => (
             <div key={index} className="command-card card">
               <h4 className="command-title">{cmd.title}</h4>
               <p className="command-description">{cmd.description}</p>
