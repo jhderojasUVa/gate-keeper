@@ -14,7 +14,7 @@ function HowItWorks(): JSX.Element {
       number: '01',
       title: 'Install & Initialize',
       description: 'Install Gate Keeper via npm and run the init command to create your configuration file.',
-      code: 'npm install @jhderojasUVa/gate-keeper\nnpx gate-keeper-init'
+      code: 'npm install @jhderojas/gate-keeper\nnpx gate-keeper-init'
     },
     {
       number: '02',

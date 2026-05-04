@@ -25,7 +25,7 @@ function Installation(): JSX.Element {
   const installSteps: InstallStep[] = [
     {
       title: 'Install via npm',
-      command: 'npm install @jhderojasUVa/gate-keeper --save-dev',
+      command: 'npm install @jhderojas/gate-keeper --save-dev',
       description: 'Add Gate Keeper to your project dependencies'
     },
     {
@@ -143,7 +143,7 @@ function Installation(): JSX.Element {
           <a href="https://github.com/jhderojasUVa/gate-keeper" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
             View on GitHub
           </a>
-          <a href="https://www.npmjs.com/package/@jhderojasUVa/gate-keeper" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+          <a href="https://www.npmjs.com/package/@jhderojas/gate-keeper" target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
             View on npm
           </a>
         </div>
