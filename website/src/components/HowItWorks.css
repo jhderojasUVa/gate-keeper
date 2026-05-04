@@ -1,0 +1,82 @@
+.how-it-works {
+  background: var(--dark);
+  position: relative;
+}
+
+.steps-container {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.step-card {
+  position: relative;
+  margin-bottom: 4rem;
+}
+
+.step-number {
+  display: inline-block;
+  font-size: 4rem;
+  font-weight: 900;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.step-content {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.step-content:hover {
+  border-color: var(--primary);
+  transform: translateX(10px);
+  box-shadow: var(--shadow);
+}
+
+.step-title {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.step-description {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.step-connector {
+  position: absolute;
+  left: 50px;
+  top: 100%;
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
+}
+
+@media (max-width: 768px) {
+  .step-number {
+    font-size: 3rem;
+  }
+
+  .step-content {
+    padding: 1.5rem;
+  }
+
+  .step-content:hover {
+    transform: translateX(5px);
+  }
+
+  .step-connector {
+    left: 20px;
+    height: 40px;
+  }
+}
